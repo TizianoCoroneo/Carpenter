@@ -1,15 +1,37 @@
 import Foundation
 import SwiftGraph
 
-public struct Factory<Requirement, Product> {
-    public var wrappedValue: (Requirement) async throws -> Product
+public struct Factory<Requirement, LateRequirement, Product> {
+    public var builder: (Requirement) async throws -> Product
+    public var lateInit: (inout Product, LateRequirement) async throws -> Void
 
-    public init(_ builder: @escaping (Requirement) async throws -> Product) {
-        self.wrappedValue = builder
+    public init(
+        _ builder: @escaping (Requirement) async throws -> Product,
+        lateInit: @escaping (inout Product, LateRequirement) async throws -> Void
+    ) {
+        self.builder = builder
+        self.lateInit = lateInit
+    }
+
+    public init(
+        _ builder: @escaping (Requirement) async throws -> Product,
+        lateInit: @escaping (inout Product) async throws -> Void
+    ) where LateRequirement == Void {
+        self.init(
+            builder,
+            lateInit: { (x, _: Void) in try await lateInit(&x) })
+    }
+
+    public init(
+        _ builder: @escaping (Requirement) async throws -> Product
+    ) where LateRequirement == Void {
+        self.init(
+            builder,
+            lateInit: { (_, _: Void) in })
     }
 
     public func callAsFunction(_ requirement: Requirement) async throws -> Product {
-        try await wrappedValue(requirement)
+        try await builder(requirement)
     }
 }
 
@@ -31,8 +53,7 @@ public struct Carpenter {
     public init() {}
 
     public mutating func add<Requirement, LateRequirement, Product>(
-        _ factory: Factory<Requirement, Product>,
-        lateInit: @escaping (inout Product, LateRequirement) async throws -> Void
+        _ factory: Factory<Requirement, LateRequirement, Product>
     ) throws {
         let requirementName = String(describing: Requirement.self)
         let lateRequirementName = String(describing: LateRequirement.self)
@@ -59,7 +80,7 @@ public struct Carpenter {
                     type: String(describing: type(of: $0)))
             }
 
-            return try await factory(requirement)
+            return try await factory.builder(requirement)
         }
 
         lateInitRegistry[resultName] = {
@@ -78,26 +99,9 @@ public struct Carpenter {
                     type: String(describing: type(of: $0)))
             }
 
-            try await lateInit(&product, requirement)
+            try await factory.lateInit(&product, requirement)
             $0 = product
         }
-    }
-
-    public mutating func add<Requirement, Product>(
-        _ factory: Factory<Requirement, Product>,
-        lateInit: @escaping (inout Product) async throws -> Void
-    ) throws {
-        try self.add(
-            factory,
-            lateInit: { (x, _: Void) in try await lateInit(&x) })
-    }
-
-    public mutating func add<Requirement, Product>(
-        _ factory: Factory<Requirement, Product>
-    ) throws {
-        try self.add(
-            factory,
-            lateInit: { (_, _: Void) in })
     }
 
     private func splitRequirements(_ requirementName: String) -> [String] {
@@ -323,7 +327,9 @@ public struct Carpenter {
         }
     }
 
-    public func get<R, Product>(_ dependency: Factory<R, Product>) throws -> Product {
+    public func get<Requirement, LateInit, Product>(
+        _ dependency: Factory<Requirement, LateInit, Product>
+    ) throws -> Product {
         let name = String(describing: Product.self)
 
         guard let result = self.builtProductsRegistry[name]

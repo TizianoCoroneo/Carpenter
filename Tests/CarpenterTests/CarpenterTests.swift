@@ -4,14 +4,22 @@ import XCTest
 enum Dependency {
 
     static var i = Factory { 0 }
-    static var keychain = Factory(Keychain.init)
-    static var authClient = Factory(AuthClient.init)
+
+    static var keychain = Factory(Keychain.init) { (x: inout Keychain) in
+        x.i = 10
+    }
+
+    static var authClient = Factory(AuthClient.init) { (x: inout AuthClient, k: Keychain) in
+        x.i = k.i * 2
+    }
     static var urlSession = Factory { URLSession.shared }
     static var apiClient = Factory(ApiClient.init)
     static var threeDependenciesObject = Factory(ThreeDependenciesObject.init)
     static var fourDependenciesObject = Factory(FourDependenciesObject.init)
     static var fiveDependenciesObject = Factory(FiveDependenciesObject.init)
-    static var sixDependenciesObject = Factory(SixDependenciesObject.init)
+    static var sixDependenciesObject = Factory(SixDependenciesObject.init) { (x: inout SixDependenciesObject) in
+        x.i = 7
+    }
     static var sevenDependenciesObject = Factory(SevenDependenciesObject.init)
     static var cycleA = Factory(CycleA.init)
     static var cycleB = Factory(CycleB.init)
@@ -58,12 +66,12 @@ final class CarpenterTests: XCTestCase {
     func test_AddingDependeciesOutOfOrder() throws {
         var carpenter = Carpenter()
 
-        try carpenter.add(Dependency.i)
         try carpenter.add(Dependency.threeDependenciesObject)
         try carpenter.add(Dependency.apiClient)
         try carpenter.add(Dependency.urlSession)
         try carpenter.add(Dependency.authClient)
         try carpenter.add(Dependency.keychain)
+        try carpenter.add(Dependency.i)
 
         try carpenter.finalizeGraph()
 
@@ -178,22 +186,16 @@ final class CarpenterTests: XCTestCase {
         var carpenter = Carpenter()
 
         try carpenter.add(Dependency.i)
-        try carpenter.add(Dependency.keychain) { (x: inout Keychain) in
-            x.i = 10
-        }
-        try carpenter.add(Dependency.authClient) { (x: inout AuthClient, k: Keychain) in
-            x.i = k.i * 2
-        }
+        try carpenter.add(Dependency.keychain)
+        try carpenter.add(Dependency.authClient)
         try carpenter.add(Dependency.urlSession)
-        try carpenter.add(Dependency.apiClient) { (x: inout ApiClient, y: SixDependenciesObject) in
-            x.i = y.i * 3
-        }
+        try carpenter.add(Factory(ApiClient.init) { (x: inout ApiClient, k: SixDependenciesObject) in
+            x.i = k.i * 3
+         })
         try carpenter.add(Dependency.threeDependenciesObject)
         try carpenter.add(Dependency.fourDependenciesObject)
         try carpenter.add(Dependency.fiveDependenciesObject)
-        try carpenter.add(Dependency.sixDependenciesObject) { (x: inout SixDependenciesObject) in
-            x.i = 7
-        }
+        try carpenter.add(Dependency.sixDependenciesObject)
 
         try await carpenter.build()
 
@@ -232,9 +234,9 @@ final class CarpenterTests: XCTestCase {
 
         try carpenter.add(Dependency.i)
         try carpenter.add(Dependency.urlSession)
-        try carpenter.add(Dependency.authClient) { (_, _: Keychain) in }
-        try carpenter.add(Dependency.keychain) { (_, _: ApiClient) in }
-        try carpenter.add(Dependency.apiClient)  { (_, _: AuthClient) in }
+        try carpenter.add(Factory(AuthClient.init) { (_, _: Keychain) in })
+        try carpenter.add(Factory(Keychain.init) { (_, _: ApiClient) in })
+        try carpenter.add(Factory(ApiClient.init)  { (_, _: AuthClient) in })
 
         try await XCTAssertThrowsAsync(
             try await carpenter.build()

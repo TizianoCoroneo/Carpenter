@@ -1,69 +1,15 @@
-import Foundation
 import SwiftGraph
-
-/// A ``Factory`` describes how to create a value of type `Product` using a value of type `Requirement`, and how to set additional
-/// properties on the `Product` value after intialization, using a value of type `LateRequirement`.
-///
-/// The initializer ``init(_ builder:)`` describes how to create a value of type `Product` from a value of `Requirement`.
-///
-///```swift
-///let urlSessionFactory = Factory { URLSession.shared }
-///// has type Factory<Void, Void, URLSession>
-///
-///let counterFactory = Factory { (x: Int) in Counter(count: x) }
-///// has type Factory<Int, Void, Counter>
-///
-///let userFactory = Factory { (id: UUID, name: String) in
-///    User(id: id, name: name)
-///} lateInit: { (user: inout User, email: EmailAddress) in
-///    user.email = email
-///}
-///// has type Factory<(UUID, String), EmailAddress, Counter>
-///```
-///
-public struct Factory<Requirement, LateRequirement, Product> {
-    var builder: (Requirement) async throws -> Product
-    var lateInit: (inout Product, LateRequirement) async throws -> Void
-
-    public init(
-        _ builder: @escaping (Requirement) async throws -> Product,
-        lateInit: @escaping (inout Product, LateRequirement) async throws -> Void
-    ) {
-        self.builder = builder
-        self.lateInit = lateInit
-    }
-
-    public init(
-        _ builder: @escaping (Requirement) async throws -> Product,
-        lateInit: @escaping (inout Product) async throws -> Void
-    ) where LateRequirement == Void {
-        self.init(
-            builder,
-            lateInit: { (x, _: Void) in try await lateInit(&x) })
-    }
-
-    public init(
-        _ builder: @escaping (Requirement) async throws -> Product
-    ) where LateRequirement == Void {
-        self.init(
-            builder,
-            lateInit: { (_, _: Void) in })
-    }
-
-    public func callAsFunction(_ requirement: Requirement) async throws -> Product {
-        try await builder(requirement)
-    }
-}
 
 public struct Carpenter {
 
-    typealias Vertex = String
+    public static var shared: Carpenter = .init()
+
+    public typealias Vertex = String
     private typealias E = CarpenterError
 
-    private(set) var dependencyGraph: UnweightedGraph<Vertex> = .init()
-    private(set) var lateInitDependencyGraph: UnweightedGraph<Vertex> = .init()
-    private var factoryRegistry: [Vertex: (Any) async throws -> Any] = [:]
-    private var lateInitRegistry: [Vertex: (inout Any, Any) async throws -> Void] = [:]
+    public private(set) var dependencyGraph: UnweightedGraph<Vertex> = .init()
+    public private(set) var lateInitDependencyGraph: UnweightedGraph<Vertex> = .init()
+    private var factoryRegistry: [Vertex: AnyFactory] = [:]
     private var builtProductsRegistry: [Vertex: Any] = [:]
     private var requirementsByResultName: [Vertex: [Vertex]] = [:]
     private var lateRequirementsByResultName: [Vertex: [Vertex]] = [:]
@@ -73,26 +19,14 @@ public struct Carpenter {
 
     public init() {}
 
+    public init(@FactoryBuilder _ factoryBuilder: () -> Result<Carpenter, Error>) throws {
+        self = try factoryBuilder().get()
+    }
+
     public mutating func add<Requirement, LateRequirement, Product>(
         _ factory: Factory<Requirement, LateRequirement, Product>
     ) throws {
-        let requirementName = String(describing: Requirement.self)
-        let lateRequirementName = String(describing: LateRequirement.self)
-        let resultName = String(describing: Product.self)
-
-        guard !requirementsByResultName.keys.contains(resultName)
-        else { throw E.factoryAlreadyAdded(name: resultName) }
-
-        guard !lateRequirementsByResultName.keys.contains(resultName)
-        else { throw E.factoryAlreadyAdded(name: resultName) }
-
-        requirementsByResultName[resultName] = splitRequirements(requirementName)
-        lateRequirementsByResultName[resultName] = splitRequirements(lateRequirementName)
-
-        _ = dependencyGraph.addVertex(resultName)
-        _ = lateInitDependencyGraph.addVertex(resultName)
-
-        registerBuilder(factory)
+        try self.add(factory.eraseToAnyFactory())
     }
 
     public mutating func build() async throws {
@@ -124,13 +58,31 @@ public struct Carpenter {
 
     // MARK: - Internal / Private
 
+    mutating func add(
+        _ factory: AnyFactory
+    ) throws {
+        guard !requirementsByResultName.keys.contains(factory.resultName)
+        else { throw E.factoryAlreadyAdded(name: factory.resultName) }
+
+        guard !lateRequirementsByResultName.keys.contains(factory.resultName)
+        else { throw E.factoryAlreadyAdded(name: factory.resultName) }
+
+        requirementsByResultName[factory.resultName] = splitRequirements(factory.requirementName)
+        lateRequirementsByResultName[factory.resultName] = splitRequirements(factory.lateRequirementName)
+
+        _ = dependencyGraph.addVertex(factory.resultName)
+        _ = lateInitDependencyGraph.addVertex(factory.resultName)
+
+        factoryRegistry[factory.resultName] = factory
+    }
+
     private func build(
         _ vertex: String
     ) async throws -> Any {
         guard let requirements = requirementsByResultName[vertex]
         else { throw E.cannotRetrieveRequirementsForProduct(name: vertex) }
 
-        guard let factory = factoryRegistry[vertex]
+        guard let factory = factoryRegistry[vertex]?.builder
         else { throw E.cannotRetrieveFactoryBuilder(name: vertex) }
 
         let result: Any
@@ -224,7 +176,7 @@ public struct Carpenter {
         guard let requirements = lateRequirementsByResultName[vertex]
         else { throw E.cannotRetrieveLateRequirementsForProduct(name: vertex) }
 
-        guard let setup = lateInitRegistry[vertex]
+        guard let setup = factoryRegistry[vertex]?.lateInit
         else { throw E.cannotRetrieveFactoryLateInitialization(name: vertex) }
 
         // TODO: Apply variadic generics once available
@@ -300,44 +252,6 @@ public struct Carpenter {
         return product
     }
 
-    private mutating func registerBuilder<Requirement, LateRequirement, Product>(
-        _ factory: Factory<Requirement, LateRequirement, Product>
-    ) {
-        let resultName = String(describing: Product.self)
-
-        factoryRegistry[resultName] = {
-            guard let requirement = $0 as? Requirement
-            else {
-                throw E.requirementHasMismatchingType(
-                    resultName: resultName,
-                    expected: String(describing: Requirement.self),
-                    type: String(describing: type(of: $0)))
-            }
-
-            return try await factory.builder(requirement)
-        }
-
-        lateInitRegistry[resultName] = {
-            guard var product = $0 as? Product
-            else {
-                throw E.productHasMismatchingType(
-                    name: resultName,
-                    type: String(describing: type(of: $0)))
-            }
-
-            guard let requirement = $1 as? LateRequirement
-            else {
-                throw E.lateRequirementHasMismatchingType(
-                    resultName: resultName,
-                    expected: String(describing: Requirement.self),
-                    type: String(describing: type(of: $0)))
-            }
-
-            try await factory.lateInit(&product, requirement)
-            $0 = product
-        }
-    }
-
     mutating func finalizeGraph() throws {
         for index in dependencyGraph.edges.indices {
             dependencyGraph.edges[index].removeAll()
@@ -388,7 +302,7 @@ public struct Carpenter {
     }
 }
 
-public enum CarpenterError: CustomNSError, Equatable {
+public enum CarpenterError: Error, Equatable, CustomStringConvertible {
     case requirementNotFound(name: String)
     case requirementNotFoundForLateInitialization(name: String)
     case requirementHasMismatchingType(resultName: String, expected: String, type: String)
@@ -407,89 +321,31 @@ public enum CarpenterError: CustomNSError, Equatable {
     case dependencyCyclesDetected(cycles: [[String]])
     case lateInitCyclesDetected(cycles: [[String]])
 
-    public static let errorDomain: String = "com.ticketswap.carpenter"
-
-    public var errorCode: Int {
+    public var description: String {
         switch self {
-        case .requirementNotFound: return 1
-        case .requirementHasMismatchingType: return 2
-        case .cannotRetrieveRequirementsForProduct: return 3
-        case .cannotRetrieveFactoryBuilder: return 4
-        case .productNotFound: return 5
-        case .productHasMismatchingType: return 6
-        case .factoryAlreadyAdded: return 7
-        case .builtProductNotFoundForVertex: return 8
-        case .factoryBuilderHasTooManyArguments: return 9
-        case .cannotRetrieveLateRequirementsForProduct: return 10
-        case .lateRequirementHasMismatchingType: return 11
-        case .dependencyCyclesDetected: return 12
-        case .lateInitCyclesDetected: return 13
-        case .productNotFoundForLateInitialization: return 14
-        case .requirementNotFoundForLateInitialization: return 15
-        case .cannotRetrieveFactoryLateInitialization: return 16
-        case .factoryLateInitHasTooManyArguments: return 17
-        }
-    }
-
-    public var errorUserInfo: [String : Any] {
-        switch self {
-        case let .requirementNotFound(name): return [
-            NSLocalizedDescriptionKey: "Requirement \"\(name)\" not found in builder graph."
-        ]
-        case let .requirementNotFoundForLateInitialization(name): return [
-            NSLocalizedDescriptionKey: "Requirement \"\(name)\" not found in late initialization graph."
-        ]
-        case let .requirementHasMismatchingType(resultName, expected, type): return [
-            NSLocalizedDescriptionKey: "Requirement for product \"\(resultName)\" has wrong type: expected \"\(expected)\", found \"\(type)\"."
-        ]
-        case let .lateRequirementHasMismatchingType(resultName, expected, type): return [
-            NSLocalizedDescriptionKey: "Late init requirement for product \"\(resultName)\" has wrong type: expected \"\(expected)\", found \"\(type)\"."
-        ]
-        case let .cannotRetrieveRequirementsForProduct(name): return [
-            NSLocalizedDescriptionKey: "Cannot retrieve requirements for product \"\(name)\"."
-        ]
-        case let .cannotRetrieveLateRequirementsForProduct(name): return [
-            NSLocalizedDescriptionKey: "Cannot retrieve late requirements for product \"\(name)\"."
-        ]
-        case let .cannotRetrieveFactoryBuilder(name): return [
-            NSLocalizedDescriptionKey: "Cannot retrieve builder for product \"\(name)\" in builder graph."
-        ]
-        case let .cannotRetrieveFactoryLateInitialization(name): return [
-            NSLocalizedDescriptionKey: "Cannot retrieve builder for product \"\(name)\" in late initialization graph."
-        ]
-        case let .productNotFound(name): return [
-            NSLocalizedDescriptionKey: "Product \"\(name)\" not found in builder graph."
-        ]
-        case let .productNotFoundForLateInitialization(name): return [
-            NSLocalizedDescriptionKey: "Product \"\(name)\" not found in late initialization graph."
-        ]
-        case let .productHasMismatchingType(name, type): return [
-            NSLocalizedDescriptionKey: "Product \"\(name)\" has mismatching type \"\(type)\"."
-        ]
-        case let .factoryAlreadyAdded(name): return [
-            NSLocalizedDescriptionKey: "Already added builder for product \"\(name)\"."
-        ]
-        case let .builtProductNotFoundForVertex(name): return [
-            NSLocalizedDescriptionKey: "Built product not found for product \"\(name)\"."
-        ]
-        case let .factoryBuilderHasTooManyArguments(name, count): return [
-            NSLocalizedDescriptionKey: "Dependency builder for \"\(name)\" has too many arguments (\(count))."
-        ]
-        case let .factoryLateInitHasTooManyArguments(name, count): return [
-            NSLocalizedDescriptionKey: "Dependency late initialization for \"\(name)\" has too many arguments (\(count))."
-        ]
-        case let .dependencyCyclesDetected(cycles): return [
-            NSLocalizedDescriptionKey: """
+        case let .requirementNotFound(name): return "Requirement \"\(name)\" not found in builder graph."
+        case let .requirementNotFoundForLateInitialization(name): return "Requirement \"\(name)\" not found in late initialization graph."
+        case let .requirementHasMismatchingType(resultName, expected, type): return "Requirement for product \"\(resultName)\" has wrong type: expected \"\(expected)\", found \"\(type)\"."
+        case let .lateRequirementHasMismatchingType(resultName, expected, type): return "Late init requirement for product \"\(resultName)\" has wrong type: expected \"\(expected)\", found \"\(type)\"."
+        case let .cannotRetrieveRequirementsForProduct(name): return "Cannot retrieve requirements for product \"\(name)\"."
+        case let .cannotRetrieveLateRequirementsForProduct(name): return "Cannot retrieve late requirements for product \"\(name)\"."
+        case let .cannotRetrieveFactoryBuilder(name): return "Cannot retrieve builder for product \"\(name)\" in builder graph."
+        case let .cannotRetrieveFactoryLateInitialization(name): return "Cannot retrieve builder for product \"\(name)\" in late initialization graph."
+        case let .productNotFound(name): return "Product \"\(name)\" not found in builder graph."
+        case let .productNotFoundForLateInitialization(name): return "Product \"\(name)\" not found in late initialization graph."
+        case let .productHasMismatchingType(name, type): return "Product \"\(name)\" has mismatching type \"\(type)\"."
+        case let .factoryAlreadyAdded(name): return "Already added builder for product \"\(name)\"."
+        case let .builtProductNotFoundForVertex(name): return "Built product not found for product \"\(name)\"."
+        case let .factoryBuilderHasTooManyArguments(name, count): return "Dependency builder for \"\(name)\" has too many arguments (\(count))."
+        case let .factoryLateInitHasTooManyArguments(name, count): return "Dependency late initialization for \"\(name)\" has too many arguments (\(count))."
+        case let .dependencyCyclesDetected(cycles): return """
             Cycles detected in dependency graph:
             \(cycles.reversed().map { $0.joined(separator: " -> ") }.joined(separator: "\n"))
             """
-        ]
-        case let .lateInitCyclesDetected(cycles): return [
-            NSLocalizedDescriptionKey: """
+        case let .lateInitCyclesDetected(cycles): return """
             Cycles detected in late initialization graph:
             \(cycles.reversed().map { $0.joined(separator: " -> ") }.joined(separator: "\n"))
             """
-        ]
         }
     }
 }

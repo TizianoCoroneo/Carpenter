@@ -1,13 +1,25 @@
 import Foundation
 import SwiftGraph
 
+public struct Factory<Requirement, Product> {
+    public var wrappedValue: (Requirement) async throws -> Product
+
+    public init(_ builder: @escaping (Requirement) async throws -> Product) {
+        self.wrappedValue = builder
+    }
+
+    public func callAsFunction(_ requirement: Requirement) async throws -> Product {
+        try await wrappedValue(requirement)
+    }
+}
+
 public struct Carpenter {
 
     typealias Vertex = String
     private typealias E = CarpenterError
 
     var dependencyGraph: UnweightedGraph<Vertex> = .init()
-    private var builderRegistry: [Vertex: (Any) async throws -> Any] = [:]
+    private var factoryRegistry: [Vertex: (Any) async throws -> Any] = [:]
     private var builtProductsRegistry: [Vertex: Any] = [:]
     private var indexByVertex: [Vertex: Int] = [:]
     private var requirementsByResultName: [Vertex: [Vertex]] = [:]
@@ -15,7 +27,8 @@ public struct Carpenter {
     public init() {}
 
     public mutating func add<Requirement, Product>(
-        _ builder: @escaping (Requirement) async throws -> Product
+        _ factory: Factory<Requirement, Product>
+//        lateInit: @escaping (LateInitRequirement, Product) async throws -> Void
     ) throws {
         let requirementName = String(describing: Requirement.self)
         let resultName = String(describing: Product.self)
@@ -36,7 +49,7 @@ public struct Carpenter {
             requirementsByResultName[resultName] = []
         }
 
-        builderRegistry[resultName] = {
+        factoryRegistry[resultName] = {
             guard let requirement = $0 as? Requirement
             else {
                 throw E.requirementHasMismatchingType(
@@ -45,7 +58,7 @@ public struct Carpenter {
                     type: String(describing: type(of: $0)))
             }
 
-            return try await builder(requirement)
+            return try await factory(requirement)
         }
     }
 
@@ -77,26 +90,26 @@ public struct Carpenter {
             guard let requirements = requirementsByResultName[vertex]
             else { throw E.cannotRetrieveRequirementsForProduct(name: vertex) }
 
-            guard let builder = builderRegistry[vertex]
-            else { throw E.cannotRetrieveBuilderForProduct(name: vertex) }
+            guard let factory = factoryRegistry[vertex]
+            else { throw E.cannotRetrieveFactoryForProduct(name: vertex) }
 
             let result: Any
 
             switch requirements.count {
             case 0:
-                result = try await builder(())
+                result = try await factory(())
 
             case 1:
                 guard let dependency = builtProductsRegistry[requirements[0]]
                 else { throw E.builtProductNotFoundForVertex(name: requirements[0]) }
-                result = try await builder(dependency)
+                result = try await factory(dependency)
 
             case 2:
                 guard let dependency1 = builtProductsRegistry[requirements[0]]
                 else { throw E.builtProductNotFoundForVertex(name: requirements[0]) }
                 guard let dependency2 = builtProductsRegistry[requirements[1]]
                 else { throw E.builtProductNotFoundForVertex(name: requirements[1]) }
-                result = try await builder((dependency1, dependency2))
+                result = try await factory((dependency1, dependency2))
 
             case 3:
                 guard let dependency1 = builtProductsRegistry[requirements[0]]
@@ -105,7 +118,7 @@ public struct Carpenter {
                 else { throw E.builtProductNotFoundForVertex(name: requirements[1]) }
                 guard let dependency3 = builtProductsRegistry[requirements[2]]
                 else { throw E.builtProductNotFoundForVertex(name: requirements[2]) }
-                result = try await builder((dependency1, dependency2, dependency3))
+                result = try await factory((dependency1, dependency2, dependency3))
 
             case 4:
                 guard let dependency1 = builtProductsRegistry[requirements[0]]
@@ -116,7 +129,7 @@ public struct Carpenter {
                 else { throw E.builtProductNotFoundForVertex(name: requirements[2]) }
                 guard let dependency4 = builtProductsRegistry[requirements[3]]
                 else { throw E.builtProductNotFoundForVertex(name: requirements[3]) }
-                result = try await builder((dependency1, dependency2, dependency3, dependency4))
+                result = try await factory((dependency1, dependency2, dependency3, dependency4))
 
             case 5:
                 guard let dependency1 = builtProductsRegistry[requirements[0]]
@@ -129,7 +142,7 @@ public struct Carpenter {
                 else { throw E.builtProductNotFoundForVertex(name: requirements[3]) }
                 guard let dependency5 = builtProductsRegistry[requirements[4]]
                 else { throw E.builtProductNotFoundForVertex(name: requirements[4]) }
-                result = try await builder((dependency1, dependency2, dependency3, dependency4, dependency5))
+                result = try await factory((dependency1, dependency2, dependency3, dependency4, dependency5))
 
             case 6:
                 guard let dependency1 = builtProductsRegistry[requirements[0]]
@@ -144,23 +157,23 @@ public struct Carpenter {
                 else { throw E.builtProductNotFoundForVertex(name: requirements[4]) }
                 guard let dependency6 = builtProductsRegistry[requirements[5]]
                 else { throw E.builtProductNotFoundForVertex(name: requirements[5]) }
-                result = try await builder((dependency1, dependency2, dependency3, dependency4, dependency5, dependency6))
+                result = try await factory((dependency1, dependency2, dependency3, dependency4, dependency5, dependency6))
 
             default:
-                throw E.dependencyBuilderHasTooManyArguments(count: requirements.count)
+                throw E.factoryHasTooManyArguments(count: requirements.count)
             }
 
             self.builtProductsRegistry[vertex] = result
         }
     }
 
-    public func get<T>(_ builtProduct: T.Type = T.self) throws -> T {
-        let name = String(describing: builtProduct)
+    public func get<R, Product>(_ dependency: Factory<R, Product>) throws -> Product {
+        let name = String(describing: Product.self)
 
         guard let result = self.builtProductsRegistry[name]
         else { throw E.productNotFound(name: name) }
 
-        guard let typedResult = result as? T
+        guard let typedResult = result as? Product
         else { throw E.productHasMismatchingType(name: name, type: String(describing: type(of: result))) }
 
         return typedResult
@@ -171,12 +184,12 @@ public enum CarpenterError: CustomNSError, Equatable {
     case requirementNotFound(name: String)
     case requirementHasMismatchingType(resultName: String, expected: String, type: String)
     case cannotRetrieveRequirementsForProduct(name: String)
-    case cannotRetrieveBuilderForProduct(name: String)
+    case cannotRetrieveFactoryForProduct(name: String)
     case productNotFound(name: String)
     case productHasMismatchingType(name: String, type: String)
     case dependencyIsAlreadyAdded(name: String)
     case builtProductNotFoundForVertex(name: String)
-    case dependencyBuilderHasTooManyArguments(count: Int)
+    case factoryHasTooManyArguments(count: Int)
 
     public static let errorDomain: String = "com.ticketswap.carpenter"
 
@@ -185,12 +198,12 @@ public enum CarpenterError: CustomNSError, Equatable {
         case .requirementNotFound: return 1
         case .requirementHasMismatchingType: return 2
         case .cannotRetrieveRequirementsForProduct: return 3
-        case .cannotRetrieveBuilderForProduct: return 4
+        case .cannotRetrieveFactoryForProduct: return 4
         case .productNotFound: return 5
         case .productHasMismatchingType: return 6
         case .dependencyIsAlreadyAdded: return 7
         case .builtProductNotFoundForVertex: return 8
-        case .dependencyBuilderHasTooManyArguments: return 9
+        case .factoryHasTooManyArguments: return 9
         }
     }
 
@@ -206,7 +219,7 @@ public enum CarpenterError: CustomNSError, Equatable {
         case let .cannotRetrieveRequirementsForProduct(name): return [
             NSLocalizedDescriptionKey: "Cannot retrieve requirements for product \"\(name)\"."
         ]
-        case let .cannotRetrieveBuilderForProduct(name): return [
+        case let .cannotRetrieveFactoryForProduct(name): return [
             NSLocalizedDescriptionKey: "Cannot retrieve builder for product \"\(name)\"."
         ]
         case let .productNotFound(name): return [
@@ -221,7 +234,7 @@ public enum CarpenterError: CustomNSError, Equatable {
         case let .builtProductNotFoundForVertex(name): return [
             NSLocalizedDescriptionKey: "Built product not found for product \"\(name)\"."
         ]
-        case let .dependencyBuilderHasTooManyArguments(count): return [
+        case let .factoryHasTooManyArguments(count): return [
             NSLocalizedDescriptionKey: "Dependency builder has too many arguments (\(count))."
         ]
         }

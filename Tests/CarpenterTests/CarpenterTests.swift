@@ -1,22 +1,29 @@
 import XCTest
 @testable import Carpenter
 
+enum Dependency {
+
+    static var keychain = Factory(Keychain.init)
+    static var authClient = Factory(AuthClient.init)
+    static var urlSession = Factory { URLSession.shared }
+    static var apiClient = Factory(ApiClient.init)
+    static var threeDependenciesObject = Factory(ThreeDependenciesObject.init)
+    static var fourDependenciesObject = Factory(FourDependenciesObject.init)
+    static var fiveDependenciesObject = Factory(FiveDependenciesObject.init)
+    static var sixDependenciesObject = Factory(SixDependenciesObject.init)
+    static var sevenDependenciesObject = Factory(SevenDependenciesObject.init)
+}
+
 final class CarpenterTests: XCTestCase {
-
-    let urlSessionRecipy: () -> URLSession = {
-        URLSession.shared
-    }
-
-    let threeDependencyObjectRecipy = ThreeDependenciesObject.init
 
     func test_AddingDependeciesInOrder() async throws {
         var carpenter = Carpenter()
 
-        try carpenter.add(Keychain.init)
-        try carpenter.add(AuthClient.init)
-        try carpenter.add(urlSessionRecipy)
-        try carpenter.add(ApiClient.init)
-        try carpenter.add(ThreeDependenciesObject.init)
+        try carpenter.add(Dependency.keychain)
+        try carpenter.add(Dependency.authClient)
+        try carpenter.add(Dependency.urlSession)
+        try carpenter.add(Dependency.apiClient)
+        try carpenter.add(Dependency.threeDependenciesObject)
 
         try carpenter.finalizeGraph()
 
@@ -42,11 +49,11 @@ final class CarpenterTests: XCTestCase {
     func test_AddingDependeciesOutOfOrder() throws {
         var carpenter = Carpenter()
 
-        try carpenter.add(ThreeDependenciesObject.init)
-        try carpenter.add(ApiClient.init)
-        try carpenter.add(urlSessionRecipy)
-        try carpenter.add(AuthClient.init)
-        try carpenter.add(Keychain.init)
+        try carpenter.add(Dependency.threeDependenciesObject)
+        try carpenter.add(Dependency.apiClient)
+        try carpenter.add(Dependency.urlSession)
+        try carpenter.add(Dependency.authClient)
+        try carpenter.add(Dependency.keychain)
 
         try carpenter.finalizeGraph()
 
@@ -72,90 +79,90 @@ final class CarpenterTests: XCTestCase {
     func test_BuildProducts() async throws {
         var carpenter = Carpenter()
 
-        try carpenter.add(ThreeDependenciesObject.init)
-        try carpenter.add(ApiClient.init)
-        try carpenter.add(urlSessionRecipy)
-        try carpenter.add(AuthClient.init)
-        try carpenter.add(Keychain.init)
+        try carpenter.add(Dependency.threeDependenciesObject)
+        try carpenter.add(Dependency.apiClient)
+        try carpenter.add(Dependency.urlSession)
+        try carpenter.add(Dependency.authClient)
+        try carpenter.add(Dependency.keychain)
 
         try await carpenter.build()
 
-        _ = try carpenter.get(Keychain.self)
-        _ = try carpenter.get(AuthClient.self)
-        _ = try carpenter.get(URLSession.self)
-        _ = try carpenter.get(ApiClient.self)
-        _ = try carpenter.get(ThreeDependenciesObject.self)
+        let _: Keychain = try carpenter.get(Dependency.keychain)
+        let _: AuthClient = try carpenter.get(Dependency.authClient)
+        let _: URLSession = try carpenter.get(Dependency.urlSession)
+        let _: AuthClient = try carpenter.get(Dependency.authClient)
+        let _: ThreeDependenciesObject = try carpenter.get(Dependency.threeDependenciesObject)
     }
 
     func test_FinalizeAndBuildProducts() async throws {
         var carpenter = Carpenter()
 
-        try carpenter.add(ThreeDependenciesObject.init)
-        try carpenter.add(ApiClient.init)
-        try carpenter.add(urlSessionRecipy)
-        try carpenter.add(AuthClient.init)
-        try carpenter.add(Keychain.init)
+        try carpenter.add(Dependency.threeDependenciesObject)
+        try carpenter.add(Dependency.apiClient)
+        try carpenter.add(Dependency.urlSession)
+        try carpenter.add(Dependency.authClient)
+        try carpenter.add(Dependency.keychain)
 
         try carpenter.finalizeGraph()
         try await carpenter.build()
 
-        _ = try carpenter.get(Keychain.self)
-        _ = try carpenter.get(AuthClient.self)
-        _ = try carpenter.get(URLSession.self)
-        _ = try carpenter.get(ApiClient.self)
-        _ = try carpenter.get(ThreeDependenciesObject.self)
+        let _: Keychain = try carpenter.get(Dependency.keychain)
+        let _: AuthClient = try carpenter.get(Dependency.authClient)
+        let _: URLSession = try carpenter.get(Dependency.urlSession)
+        let _: AuthClient = try carpenter.get(Dependency.authClient)
+        let _: ThreeDependenciesObject = try carpenter.get(Dependency.threeDependenciesObject)
     }
 
     func test_BuildBigProducts() async throws {
         var carpenter = Carpenter()
 
-        try carpenter.add(Keychain.init)
-        try carpenter.add(AuthClient.init)
-        try carpenter.add(urlSessionRecipy)
-        try carpenter.add(ApiClient.init)
-        try carpenter.add(ThreeDependenciesObject.init)
-        try carpenter.add(FourDependenciesObject.init)
-        try carpenter.add(FiveDependenciesObject.init)
-        try carpenter.add(SixDependenciesObject.init)
+        try carpenter.add(Dependency.keychain)
+        try carpenter.add(Dependency.authClient)
+        try carpenter.add(Dependency.urlSession)
+        try carpenter.add(Dependency.apiClient)
+        try carpenter.add(Dependency.threeDependenciesObject)
+        try carpenter.add(Dependency.fourDependenciesObject)
+        try carpenter.add(Dependency.fiveDependenciesObject)
+        try carpenter.add(Dependency.sixDependenciesObject)
 
         try await carpenter.build()
 
-        _ = try carpenter.get(Keychain.self)
-        _ = try carpenter.get(AuthClient.self)
-        _ = try carpenter.get(URLSession.self)
-        _ = try carpenter.get(ApiClient.self)
-        _ = try carpenter.get(ThreeDependenciesObject.self)
-        _ = try carpenter.get(FourDependenciesObject.self)
-        _ = try carpenter.get(FiveDependenciesObject.self)
-        _ = try carpenter.get(SixDependenciesObject.self)
+        _ = try carpenter.get(Dependency.keychain)
+        _ = try carpenter.get(Dependency.authClient)
+        _ = try carpenter.get(Dependency.urlSession)
+        _ = try carpenter.get(Dependency.apiClient)
+        _ = try carpenter.get(Dependency.threeDependenciesObject)
+        _ = try carpenter.get(Dependency.fourDependenciesObject)
+        _ = try carpenter.get(Dependency.fiveDependenciesObject)
+        _ = try carpenter.get(Dependency.sixDependenciesObject)
     }
 
     func test_BuildTooBigProducts() async throws {
         var carpenter = Carpenter()
 
-        try carpenter.add(Keychain.init)
-        try carpenter.add(AuthClient.init)
-        try carpenter.add(urlSessionRecipy)
-        try carpenter.add(ApiClient.init)
-        try carpenter.add(ThreeDependenciesObject.init)
-        try carpenter.add(FourDependenciesObject.init)
-        try carpenter.add(FiveDependenciesObject.init)
-        try carpenter.add(SixDependenciesObject.init)
-        try carpenter.add(SevenDependenciesObject.init)
+        try carpenter.add(Dependency.keychain)
+        try carpenter.add(Dependency.authClient)
+        try carpenter.add(Dependency.urlSession)
+        try carpenter.add(Dependency.apiClient)
+        try carpenter.add(Dependency.threeDependenciesObject)
+        try carpenter.add(Dependency.fourDependenciesObject)
+        try carpenter.add(Dependency.fiveDependenciesObject)
+        try carpenter.add(Dependency.sixDependenciesObject)
+        try carpenter.add(Dependency.sevenDependenciesObject)
 
         try await XCTAssertThrowsAsync(try await carpenter.build()) { error in
             let carpenterError = try XCTUnwrap(error as? CarpenterError)
-            XCTAssertEqual(carpenterError, .dependencyBuilderHasTooManyArguments(count: 7))
+            XCTAssertEqual(carpenterError, .factoryHasTooManyArguments(count: 7))
         }
     }
 
     func test_DetectDuplicateBuilders() async throws {
         var carpenter = Carpenter()
 
-        try carpenter.add(Keychain.init)
+        try carpenter.add(Dependency.keychain)
 
         try await XCTAssertThrowsAsync(
-            try carpenter.add(Keychain.init)
+            try carpenter.add(Dependency.keychain)
         ) { error in
             let carpenterError = try XCTUnwrap(error as? CarpenterError)
             XCTAssertEqual(carpenterError, .dependencyIsAlreadyAdded(name: "Keychain"))

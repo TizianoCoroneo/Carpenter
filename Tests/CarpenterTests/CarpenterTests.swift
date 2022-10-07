@@ -3,30 +3,20 @@ import XCTest
 
 final class CarpenterTests: XCTestCase {
 
-    let keychainRecipy: () -> Keychain = {
-        Keychain()
-    }
-
-    let authClientRecipy: (Keychain) -> AuthClient = {
-        AuthClient(keychain: $0)
-    }
-
     let urlSessionRecipy: () -> URLSession = {
         URLSession.shared
     }
 
-    let apiClientRecipy: (URLSession, AuthClient) -> ApiClient = {
-        ApiClient(urlSession: $0, authentication: $1)
-    }
-
+    let threeDependencyObjectRecipy = ThreeDependenciesObject.init
 
     func test_AddingDependeciesInOrder() async throws {
         var carpenter = Carpenter()
 
-        try carpenter.add(keychainRecipy)
-        try carpenter.add(authClientRecipy)
+        try carpenter.add(Keychain.init)
+        try carpenter.add(AuthClient.init)
         try carpenter.add(urlSessionRecipy)
-        try carpenter.add(apiClientRecipy)
+        try carpenter.add(ApiClient.init)
+        try carpenter.add(ThreeDependenciesObject.init)
 
         try carpenter.finalizeGraph()
 
@@ -34,13 +24,17 @@ final class CarpenterTests: XCTestCase {
         XCTAssertVertexExists(carpenter, name: "NSURLSession")
         XCTAssertVertexExists(carpenter, name: "AuthClient")
         XCTAssertVertexExists(carpenter, name: "Keychain")
+        XCTAssertVertexExists(carpenter, name: "ThreeDependenciesObject")
 
         XCTAssertEdgeExists(carpenter, from: "NSURLSession", to: "ApiClient")
         XCTAssertEdgeExists(carpenter, from: "AuthClient", to: "ApiClient")
         XCTAssertEdgeExists(carpenter, from: "Keychain", to: "AuthClient")
+        XCTAssertEdgeExists(carpenter, from: "ApiClient", to: "ThreeDependenciesObject")
+        XCTAssertEdgeExists(carpenter, from: "AuthClient", to: "ThreeDependenciesObject")
+        XCTAssertEdgeExists(carpenter, from: "Keychain", to: "ThreeDependenciesObject")
 
-        XCTAssertEqual(carpenter.dependencyGraph.vertexCount, 4)
-        XCTAssertEqual(carpenter.dependencyGraph.edgeCount, 3)
+        XCTAssertEqual(carpenter.dependencyGraph.vertexCount, 5)
+        XCTAssertEqual(carpenter.dependencyGraph.edgeCount, 6)
 
         print(carpenter.dependencyGraph.description)
     }
@@ -48,10 +42,11 @@ final class CarpenterTests: XCTestCase {
     func test_AddingDependeciesOutOfOrder() throws {
         var carpenter = Carpenter()
 
-        try carpenter.add(keychainRecipy)
-        try carpenter.add(authClientRecipy)
+        try carpenter.add(ThreeDependenciesObject.init)
+        try carpenter.add(ApiClient.init)
         try carpenter.add(urlSessionRecipy)
-        try carpenter.add(apiClientRecipy)
+        try carpenter.add(AuthClient.init)
+        try carpenter.add(Keychain.init)
 
         try carpenter.finalizeGraph()
 
@@ -59,13 +54,17 @@ final class CarpenterTests: XCTestCase {
         XCTAssertVertexExists(carpenter, name: "NSURLSession")
         XCTAssertVertexExists(carpenter, name: "AuthClient")
         XCTAssertVertexExists(carpenter, name: "Keychain")
+        XCTAssertVertexExists(carpenter, name: "ThreeDependenciesObject")
 
         XCTAssertEdgeExists(carpenter, from: "NSURLSession", to: "ApiClient")
         XCTAssertEdgeExists(carpenter, from: "AuthClient", to: "ApiClient")
         XCTAssertEdgeExists(carpenter, from: "Keychain", to: "AuthClient")
+        XCTAssertEdgeExists(carpenter, from: "ApiClient", to: "ThreeDependenciesObject")
+        XCTAssertEdgeExists(carpenter, from: "AuthClient", to: "ThreeDependenciesObject")
+        XCTAssertEdgeExists(carpenter, from: "Keychain", to: "ThreeDependenciesObject")
 
-        XCTAssertEqual(carpenter.dependencyGraph.vertexCount, 4)
-        XCTAssertEqual(carpenter.dependencyGraph.edgeCount, 3)
+        XCTAssertEqual(carpenter.dependencyGraph.vertexCount, 5)
+        XCTAssertEqual(carpenter.dependencyGraph.edgeCount, 6)
 
         print(carpenter.dependencyGraph.description)
     }
@@ -73,10 +72,11 @@ final class CarpenterTests: XCTestCase {
     func test_BuildProducts() async throws {
         var carpenter = Carpenter()
 
-        try carpenter.add(keychainRecipy)
-        try carpenter.add(authClientRecipy)
+        try carpenter.add(ThreeDependenciesObject.init)
+        try carpenter.add(ApiClient.init)
         try carpenter.add(urlSessionRecipy)
-        try carpenter.add(apiClientRecipy)
+        try carpenter.add(AuthClient.init)
+        try carpenter.add(Keychain.init)
 
         try await carpenter.build()
 
@@ -84,6 +84,96 @@ final class CarpenterTests: XCTestCase {
         _ = try carpenter.get(AuthClient.self)
         _ = try carpenter.get(URLSession.self)
         _ = try carpenter.get(ApiClient.self)
+        _ = try carpenter.get(ThreeDependenciesObject.self)
+    }
+
+    func test_FinalizeAndBuildProducts() async throws {
+        var carpenter = Carpenter()
+
+        try carpenter.add(ThreeDependenciesObject.init)
+        try carpenter.add(ApiClient.init)
+        try carpenter.add(urlSessionRecipy)
+        try carpenter.add(AuthClient.init)
+        try carpenter.add(Keychain.init)
+
+        try carpenter.finalizeGraph()
+        try await carpenter.build()
+
+        _ = try carpenter.get(Keychain.self)
+        _ = try carpenter.get(AuthClient.self)
+        _ = try carpenter.get(URLSession.self)
+        _ = try carpenter.get(ApiClient.self)
+        _ = try carpenter.get(ThreeDependenciesObject.self)
+    }
+
+    func test_BuildBigProducts() async throws {
+        var carpenter = Carpenter()
+
+        try carpenter.add(Keychain.init)
+        try carpenter.add(AuthClient.init)
+        try carpenter.add(urlSessionRecipy)
+        try carpenter.add(ApiClient.init)
+        try carpenter.add(ThreeDependenciesObject.init)
+        try carpenter.add(FourDependenciesObject.init)
+        try carpenter.add(FiveDependenciesObject.init)
+        try carpenter.add(SixDependenciesObject.init)
+
+        try await carpenter.build()
+
+        _ = try carpenter.get(Keychain.self)
+        _ = try carpenter.get(AuthClient.self)
+        _ = try carpenter.get(URLSession.self)
+        _ = try carpenter.get(ApiClient.self)
+        _ = try carpenter.get(ThreeDependenciesObject.self)
+        _ = try carpenter.get(FourDependenciesObject.self)
+        _ = try carpenter.get(FiveDependenciesObject.self)
+        _ = try carpenter.get(SixDependenciesObject.self)
+    }
+
+    func test_BuildTooBigProducts() async throws {
+        var carpenter = Carpenter()
+
+        try carpenter.add(Keychain.init)
+        try carpenter.add(AuthClient.init)
+        try carpenter.add(urlSessionRecipy)
+        try carpenter.add(ApiClient.init)
+        try carpenter.add(ThreeDependenciesObject.init)
+        try carpenter.add(FourDependenciesObject.init)
+        try carpenter.add(FiveDependenciesObject.init)
+        try carpenter.add(SixDependenciesObject.init)
+        try carpenter.add(SevenDependenciesObject.init)
+
+        try await XCTAssertThrowsAsync(try await carpenter.build()) { error in
+            let carpenterError = try XCTUnwrap(error as? CarpenterError)
+            XCTAssertEqual(carpenterError, .dependencyBuilderHasTooManyArguments(count: 7))
+        }
+    }
+
+    func test_DetectDuplicateBuilders() async throws {
+        var carpenter = Carpenter()
+
+        try carpenter.add(Keychain.init)
+
+        try await XCTAssertThrowsAsync(
+            try carpenter.add(Keychain.init)
+        ) { error in
+            let carpenterError = try XCTUnwrap(error as? CarpenterError)
+            XCTAssertEqual(carpenterError, .dependencyIsAlreadyAdded(name: "Keychain"))
+        }
+    }
+}
+
+func XCTAssertThrowsAsync<T>(
+    _ expression: @autoclosure @escaping () async throws -> T,
+    errorHandler: (Error) async throws -> Void,
+    file: StaticString = #file,
+    line: UInt = #line
+) async throws {
+    do {
+        _ = try await expression()
+        XCTFail("Should have thrown an error", file: file, line: line)
+    } catch {
+        try await errorHandler(error)
     }
 }
 
@@ -128,6 +218,44 @@ struct ApiClient {
     let authentication: AuthClient
 }
 
+struct ThreeDependenciesObject {
+    let apiClient: ApiClient
+    let authClient: AuthClient
+    let keyChain: Keychain
+}
 
+struct FourDependenciesObject {
+    let apiClient: ApiClient
+    let authClient: AuthClient
+    let keyChain: Keychain
+    let threeDependenciesObject: ThreeDependenciesObject
+}
+
+struct FiveDependenciesObject {
+    let apiClient: ApiClient
+    let authClient: AuthClient
+    let keyChain: Keychain
+    let threeDependenciesObject: ThreeDependenciesObject
+    let fourDependenciesObject: FourDependenciesObject
+}
+
+struct SixDependenciesObject {
+    let apiClient: ApiClient
+    let authClient: AuthClient
+    let keyChain: Keychain
+    let threeDependenciesObject: ThreeDependenciesObject
+    let fourDependenciesObject: FourDependenciesObject
+    let fiveDependenciesObject: FiveDependenciesObject
+}
+
+struct SevenDependenciesObject {
+    let apiClient: ApiClient
+    let authClient: AuthClient
+    let keyChain: Keychain
+    let threeDependenciesObject: ThreeDependenciesObject
+    let fourDependenciesObject: FourDependenciesObject
+    let fiveDependenciesObject: FiveDependenciesObject
+    let sixDependenciesObject: FiveDependenciesObject
+}
 
 

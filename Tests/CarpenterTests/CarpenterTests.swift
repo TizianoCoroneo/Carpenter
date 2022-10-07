@@ -16,7 +16,9 @@ enum Dependency {
     static var apiClient = Factory(ApiClient.init)
     static var threeDependenciesObject = Factory(ThreeDependenciesObject.init)
     static var fourDependenciesObject = Factory(FourDependenciesObject.init)
-    static var fiveDependenciesObject = Factory(FiveDependenciesObject.init)
+    static var fiveDependenciesObject = Factory(FiveDependenciesObject.init) { (x: inout FiveDependenciesObject, k: Keychain) in
+        x.i = k.i * 4
+    }
     static var sixDependenciesObject = Factory(SixDependenciesObject.init) { (x: inout SixDependenciesObject) in
         x.i = 7
     }
@@ -178,7 +180,7 @@ final class CarpenterTests: XCTestCase {
 
         try await XCTAssertThrowsAsync(try await carpenter.build()) { error in
             let carpenterError = try XCTUnwrap(error as? CarpenterError)
-            XCTAssertEqual(carpenterError, .factoryHasTooManyArguments(count: 7))
+            XCTAssertEqual(carpenterError, .factoryBuilderHasTooManyArguments(name: "SevenDependenciesObject", count: 7))
         }
     }
 
@@ -257,7 +259,7 @@ final class CarpenterTests: XCTestCase {
             try carpenter.add(Dependency.keychain)
         ) { error in
             let carpenterError = try XCTUnwrap(error as? CarpenterError)
-            XCTAssertEqual(carpenterError, .dependencyIsAlreadyAdded(name: "Keychain"))
+            XCTAssertEqual(carpenterError, .factoryAlreadyAdded(name: "Keychain"))
         }
     }
 }

@@ -29,6 +29,12 @@ public struct Carpenter {
         try self.add(factory.eraseToAnyFactory())
     }
 
+    public mutating func add<Requirement, LateRequirement>(
+        _ task: StartupTask<Requirement, LateRequirement>
+    ) throws {
+        try self.add(task.eraseToAnyFactory())
+    }
+
     public mutating func build() async throws {
         try finalizeGraph()
 

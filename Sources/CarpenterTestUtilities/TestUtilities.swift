@@ -28,6 +28,27 @@ public enum Dependency {
     public static var cycleA = Factory(CycleA.init)
     public static var cycleB = Factory(CycleB.init)
     public static var cycleC = Factory(CycleC.init)
+
+    public static func startupTask1(exp: XCTestExpectation) -> StartupTask<ApiClient, Void> {
+        StartupTask("Task 1", { (x: ApiClient) in
+            exp.fulfill()
+            print("Ran task 1")
+        })
+    }
+
+    public static func startupTask2(exp: XCTestExpectation) -> StartupTask<Session, Void> {
+        StartupTask("Task 2", { (x: Session) in
+            exp.fulfill()
+            print("Ran task 2")
+        })
+    }
+
+    public static func startupTask3(exp: XCTestExpectation) -> StartupTask<AuthClient, Void> {
+        StartupTask("Task 3", { (x: AuthClient) in
+            exp.fulfill()
+            print("Ran task 3")
+        })
+    }
 }
 
 // MARK: - Example data structures

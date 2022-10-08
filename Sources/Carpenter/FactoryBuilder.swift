@@ -8,6 +8,12 @@ public struct FactoryBuilder {
         factory.eraseToAnyFactory()
     }
 
+    public static func buildExpression<Requirement, LateRequirement>(
+        _ task: StartupTask<Requirement, LateRequirement>
+    ) -> AnyFactory {
+        task.eraseToAnyFactory()
+    }
+
     public static func buildBlock(_ components: AnyFactory...) -> [AnyFactory] {
         components
     }

@@ -74,6 +74,111 @@ final class CarpenterTests: XCTestCase {
         print(carpenter.dependencyGraph.description)
     }
 
+    func test_NotStartStartupTasksBeforeBuldingGraph() async throws {
+        var carpenter = Carpenter()
+
+        let exp1 = expectation(description: "Should not complete start up task 1 before building the graph")
+        exp1.isInverted = true
+        let exp2 = expectation(description: "Should not complete start up task 2 before building the graph")
+        exp2.isInverted = true
+        let exp3 = expectation(description: "Should not complete start up task 3 before building the graph")
+        exp3.isInverted = true
+
+        try carpenter.add(Dependency.threeDependenciesObject)
+        try carpenter.add(Dependency.apiClient)
+        try carpenter.add(Dependency.startupTask1(exp: exp1))
+        try carpenter.add(Dependency.urlSession)
+        try carpenter.add(Dependency.startupTask2(exp: exp2))
+        try carpenter.add(Dependency.authClient)
+        try carpenter.add(Dependency.startupTask3(exp: exp3))
+        try carpenter.add(Dependency.keychain)
+        try carpenter.add(Dependency.i)
+
+        try carpenter.finalizeGraph()
+
+        XCTAssertVertexExists(carpenter, name: "Int")
+        XCTAssertVertexExists(carpenter, name: "ApiClient")
+        XCTAssertVertexExists(carpenter, name: "Session")
+        XCTAssertVertexExists(carpenter, name: "AuthClient")
+        XCTAssertVertexExists(carpenter, name: "Keychain")
+        XCTAssertVertexExists(carpenter, name: "ThreeDependenciesObject")
+        XCTAssertVertexExists(carpenter, name: "Task 1")
+        XCTAssertVertexExists(carpenter, name: "Task 2")
+        XCTAssertVertexExists(carpenter, name: "Task 3")
+
+        XCTAssertEdgeExists(carpenter, from: "Int", to: "ApiClient")
+        XCTAssertEdgeExists(carpenter, from: "Int", to: "AuthClient")
+        XCTAssertEdgeExists(carpenter, from: "Int", to: "Keychain")
+        XCTAssertEdgeExists(carpenter, from: "Int", to: "ThreeDependenciesObject")
+        XCTAssertEdgeExists(carpenter, from: "Session", to: "ApiClient")
+        XCTAssertEdgeExists(carpenter, from: "AuthClient", to: "ApiClient")
+        XCTAssertEdgeExists(carpenter, from: "Keychain", to: "AuthClient")
+        XCTAssertEdgeExists(carpenter, from: "ApiClient", to: "ThreeDependenciesObject")
+        XCTAssertEdgeExists(carpenter, from: "AuthClient", to: "ThreeDependenciesObject")
+        XCTAssertEdgeExists(carpenter, from: "ApiClient", to: "Task 1")
+        XCTAssertEdgeExists(carpenter, from: "Session", to: "Task 2")
+        XCTAssertEdgeExists(carpenter, from: "AuthClient", to: "Task 3")
+
+        XCTAssertEqual(carpenter.dependencyGraph.vertexCount, 9)
+        XCTAssertEqual(carpenter.dependencyGraph.edgeCount, 12)
+
+        print(carpenter.dependencyGraph.description)
+
+        await waitForExpectations(timeout: 0.2)
+    }
+
+    func test_AddingStartupTasksMixedIn() async throws {
+        var carpenter = Carpenter()
+
+        let exp1 = expectation(description: "Completes start up task 1 when building the graph")
+        let exp2 = expectation(description: "Completes start up task 2 when building the graph")
+        let exp3 = expectation(description: "Completes start up task 3 when building the graph")
+
+        try carpenter.add(Dependency.threeDependenciesObject)
+        try carpenter.add(Dependency.apiClient)
+        try carpenter.add(Dependency.startupTask1(exp: exp1))
+        try carpenter.add(Dependency.urlSession)
+        try carpenter.add(Dependency.startupTask2(exp: exp2))
+        try carpenter.add(Dependency.authClient)
+        try carpenter.add(Dependency.startupTask3(exp: exp3))
+        try carpenter.add(Dependency.keychain)
+        try carpenter.add(Dependency.i)
+
+        try carpenter.finalizeGraph()
+
+        XCTAssertVertexExists(carpenter, name: "Int")
+        XCTAssertVertexExists(carpenter, name: "ApiClient")
+        XCTAssertVertexExists(carpenter, name: "Session")
+        XCTAssertVertexExists(carpenter, name: "AuthClient")
+        XCTAssertVertexExists(carpenter, name: "Keychain")
+        XCTAssertVertexExists(carpenter, name: "ThreeDependenciesObject")
+        XCTAssertVertexExists(carpenter, name: "Task 1")
+        XCTAssertVertexExists(carpenter, name: "Task 2")
+        XCTAssertVertexExists(carpenter, name: "Task 3")
+
+        XCTAssertEdgeExists(carpenter, from: "Int", to: "ApiClient")
+        XCTAssertEdgeExists(carpenter, from: "Int", to: "AuthClient")
+        XCTAssertEdgeExists(carpenter, from: "Int", to: "Keychain")
+        XCTAssertEdgeExists(carpenter, from: "Int", to: "ThreeDependenciesObject")
+        XCTAssertEdgeExists(carpenter, from: "Session", to: "ApiClient")
+        XCTAssertEdgeExists(carpenter, from: "AuthClient", to: "ApiClient")
+        XCTAssertEdgeExists(carpenter, from: "Keychain", to: "AuthClient")
+        XCTAssertEdgeExists(carpenter, from: "ApiClient", to: "ThreeDependenciesObject")
+        XCTAssertEdgeExists(carpenter, from: "AuthClient", to: "ThreeDependenciesObject")
+        XCTAssertEdgeExists(carpenter, from: "ApiClient", to: "Task 1")
+        XCTAssertEdgeExists(carpenter, from: "Session", to: "Task 2")
+        XCTAssertEdgeExists(carpenter, from: "AuthClient", to: "Task 3")
+
+        XCTAssertEqual(carpenter.dependencyGraph.vertexCount, 9)
+        XCTAssertEqual(carpenter.dependencyGraph.edgeCount, 12)
+
+        try await carpenter.build()
+
+        await waitForExpectations(timeout: 0.2)
+
+        print(carpenter.dependencyGraph.description)
+    }
+
     func test_AddingDependeciesWithFactoryBuilder() throws {
         let carpenter = try Carpenter {
             Dependency.threeDependenciesObject

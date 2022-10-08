@@ -1,9 +1,3 @@
-//
-//  StartupTask.swift
-//  
-//
-//  Created by Tiziano Coroneo on 08/10/2022.
-//
 
 public struct StartupTask<Requirement, LateRequirement>: FactoryConvertible {
     let name: String

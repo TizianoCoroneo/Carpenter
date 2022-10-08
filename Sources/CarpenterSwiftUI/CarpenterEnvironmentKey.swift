@@ -1,9 +1,3 @@
-//
-//  CarpenterEnvironmentKey.swift
-//  
-//
-//  Created by Tiziano Coroneo on 08/10/2022.
-//
 
 @_exported import Carpenter
 import SwiftUI

@@ -17,9 +17,13 @@ let package = Package(
         .library(
             name: "CarpenterSwiftUI",
             targets: ["CarpenterSwiftUI"]),
+        .library(
+            name: "CarpenterVisualize",
+            targets: ["CarpenterVisualize"])
     ],
     dependencies: [
          .package(url: "https://github.com/davecom/SwiftGraph", from: "3.1.0"),
+         .package(url: "https://github.com/SwiftDocOrg/GraphViz", from: "0.4.1"),
     ],
     targets: [
 
@@ -38,8 +42,17 @@ let package = Package(
             ]),
 
         .target(
+            name: "CarpenterVisualize",
+            dependencies: [
+                "Carpenter",
+                "GraphViz",
+            ]),
+
+        .target(
             name: "CarpenterTestUtilities",
-            dependencies: ["Carpenter"]),
+            dependencies: [
+                "Carpenter",
+            ]),
 
         // MARK: - Tests
 
@@ -50,5 +63,9 @@ let package = Package(
         .testTarget(
             name: "CarpenterSwiftUITests",
             dependencies: ["CarpenterTestUtilities", "CarpenterSwiftUI"]),
+
+        .testTarget(
+            name: "CarpenterVisualizeTests",
+            dependencies: ["CarpenterTestUtilities", "CarpenterVisualize"]),
     ]
 )

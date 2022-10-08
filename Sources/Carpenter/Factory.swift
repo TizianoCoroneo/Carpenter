@@ -90,6 +90,20 @@ public protocol FactoryConvertible {
 }
 
 public struct AnyFactory {
+    public init(
+        requirementName: String,
+        lateRequirementName: String,
+        resultName: String,
+        builder: @escaping (Any) async throws -> Any,
+        lateInit: @escaping (inout Any, Any) async throws -> Void
+    ) {
+        self.requirementName = requirementName
+        self.lateRequirementName = lateRequirementName
+        self.resultName = resultName
+        self.builder = builder
+        self.lateInit = lateInit
+    }
+
     let requirementName: String
     let lateRequirementName: String
     let resultName: String

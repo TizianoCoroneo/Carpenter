@@ -23,16 +23,10 @@ public struct Carpenter {
         self = try factoryBuilder().get()
     }
 
-    public mutating func add<Requirement, LateRequirement, Product>(
-        _ factory: Factory<Requirement, LateRequirement, Product>
+    public mutating func add(
+        _ factory: some FactoryConvertible
     ) throws {
         try self.add(factory.eraseToAnyFactory())
-    }
-
-    public mutating func add<Requirement, LateRequirement>(
-        _ task: StartupTask<Requirement, LateRequirement>
-    ) throws {
-        try self.add(task.eraseToAnyFactory())
     }
 
     public mutating func build() async throws {

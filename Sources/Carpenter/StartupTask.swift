@@ -5,7 +5,7 @@
 //  Created by Tiziano Coroneo on 08/10/2022.
 //
 
-public struct StartupTask<Requirement, LateRequirement> {
+public struct StartupTask<Requirement, LateRequirement>: FactoryConvertible {
     let name: String
     var builder: (Requirement) async throws -> Void
     var lateInit: (LateRequirement) async throws -> Void
@@ -40,7 +40,7 @@ public struct StartupTask<Requirement, LateRequirement> {
             lateInit: { (_: Void) in })
     }
 
-    func eraseToAnyFactory() -> AnyFactory {
+    public func eraseToAnyFactory() -> AnyFactory {
         AnyFactory(
             requirementName: String(describing: Requirement.self),
             lateRequirementName: String(describing: LateRequirement.self),

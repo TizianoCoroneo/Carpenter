@@ -18,7 +18,7 @@
 ///// has type Factory<(UUID, String), EmailAddress, Counter>
 ///```
 ///
-public struct Factory<Requirement, LateRequirement, Product> {
+public struct Factory<Requirement, LateRequirement, Product>: FactoryConvertible {
     var builder: (Requirement) async throws -> Product
     var lateInit: (inout Product, LateRequirement) async throws -> Void
 
@@ -47,7 +47,7 @@ public struct Factory<Requirement, LateRequirement, Product> {
             lateInit: { (_, _: Void) in })
     }
 
-    func eraseToAnyFactory() -> AnyFactory {
+    public func eraseToAnyFactory() -> AnyFactory {
         AnyFactory(
             requirementName: String(describing: Requirement.self),
             lateRequirementName: String(describing: LateRequirement.self),
@@ -83,6 +83,10 @@ public struct Factory<Requirement, LateRequirement, Product> {
                 $0 = product
             })
     }
+}
+
+public protocol FactoryConvertible {
+    func eraseToAnyFactory() -> AnyFactory
 }
 
 public struct AnyFactory {

@@ -5,7 +5,6 @@ import XCTest
 // MARK: - Factories
 
 public enum Dependency {
-
     public static var i = Factory { 0 }
 
     public static var keychain = Factory(Keychain.init) { (x: inout Keychain) in

@@ -216,7 +216,7 @@ final class CarpenterTests: XCTestCase {
     }
 
     func test_AddingDependeciesWithFactoryBuilder() throws {
-        let carpenter = try Carpenter {
+        var carpenter = try Carpenter {
             Dependency.threeDependenciesObject
             Dependency.apiClient
             Dependency.urlSession
@@ -224,6 +224,8 @@ final class CarpenterTests: XCTestCase {
             Dependency.keychain
             Dependency.i
         }
+
+        try carpenter.finalizeGraph()
 
         XCTAssertVertexExists(carpenter, name: "Int")
         XCTAssertVertexExists(carpenter, name: "ApiClient")
@@ -249,11 +251,13 @@ final class CarpenterTests: XCTestCase {
     }
 
     func test_AddingDependeciesWithGenericTypes() throws {
-        let carpenter = try Carpenter {
+        var carpenter = try Carpenter {
             Dependency.array
             Dependency.dictionary
             Dependency.consumeArrayAndDictionary
         }
+
+        try carpenter.finalizeGraph()
 
         XCTAssertVertexExists(carpenter, name: "Array<Int>")
         XCTAssertVertexExists(carpenter, name: "Dictionary<String, Int>")

@@ -38,8 +38,6 @@ public struct Carpenter {
         for factory in factories {
             try self.add(factory)
         }
-
-        try finalizeGraph()
     }
 
     public mutating func add(
@@ -56,8 +54,6 @@ public struct Carpenter {
         for factory in factories {
             try self.add(factory)
         }
-
-        try finalizeGraph()
     }
 
     public mutating func build() throws {

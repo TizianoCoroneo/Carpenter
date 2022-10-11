@@ -208,7 +208,7 @@ final class CarpenterTests: XCTestCase {
         XCTAssertEqual(carpenter.dependencyGraph.vertexCount, 9)
         XCTAssertEqual(carpenter.dependencyGraph.edgeCount, 12)
 
-        try await carpenter.build()
+        try carpenter.build()
 
         await waitForExpectations(timeout: 0.2)
 
@@ -278,7 +278,7 @@ final class CarpenterTests: XCTestCase {
         try carpenter.add(Dependency.authClient)
         try carpenter.add(Dependency.keychain)
 
-        try await carpenter.build()
+        try carpenter.build()
 
         let _: Keychain = try carpenter.get(Dependency.keychain)
         let _: AuthClient = try carpenter.get(Dependency.authClient)
@@ -294,7 +294,7 @@ final class CarpenterTests: XCTestCase {
         try carpenter.add(Dependency.keychain)
         try carpenter.add(Dependency.authClient)
 
-        try await carpenter.build()
+        try carpenter.build()
 
         let keychain = try carpenter.get(Dependency.keychain)
         let authClient = try carpenter.get(Dependency.authClient)
@@ -303,7 +303,7 @@ final class CarpenterTests: XCTestCase {
         try carpenter.add(Dependency.apiClient)
         try carpenter.add(Dependency.threeDependenciesObject)
 
-        try await carpenter.build()
+        try carpenter.build()
 
         let keychain2 = try carpenter.get(Dependency.keychain)
         let authClient2 = try carpenter.get(Dependency.authClient)
@@ -327,7 +327,7 @@ final class CarpenterTests: XCTestCase {
             Dependency.keychain
         }
 
-        try await carpenter.build()
+        try carpenter.build()
 
         let _: Keychain = try carpenter.get(Dependency.keychain)
         let _: AuthClient = try carpenter.get(Dependency.authClient)
@@ -347,7 +347,7 @@ final class CarpenterTests: XCTestCase {
         try carpenter.add(Dependency.keychain)
 
         try carpenter.finalizeGraph()
-        try await carpenter.build()
+        try carpenter.build()
 
         let _: Keychain = try carpenter.get(Dependency.keychain)
         let _: AuthClient = try carpenter.get(Dependency.authClient)
@@ -369,7 +369,7 @@ final class CarpenterTests: XCTestCase {
         try carpenter.add(Dependency.fiveDependenciesObject)
         try carpenter.add(Dependency.sixDependenciesObject)
 
-        try await carpenter.build()
+        try carpenter.build()
 
         _ = try carpenter.get(Dependency.keychain)
         _ = try carpenter.get(Dependency.authClient)
@@ -395,7 +395,7 @@ final class CarpenterTests: XCTestCase {
         try carpenter.add(Dependency.sixDependenciesObject)
         try carpenter.add(Dependency.sevenDependenciesObject)
 
-        try await XCTAssertThrowsAsync(try await carpenter.build()) { error in
+        try await XCTAssertThrowsAsync(try carpenter.build()) { error in
             let carpenterError = try XCTUnwrap(error as? CarpenterError)
             XCTAssertEqual(carpenterError, .factoryBuilderHasTooManyArguments(name: "SevenDependenciesObject", count: 7))
         }
@@ -416,7 +416,7 @@ final class CarpenterTests: XCTestCase {
         try carpenter.add(Dependency.fiveDependenciesObject)
         try carpenter.add(Dependency.sixDependenciesObject)
 
-        try await carpenter.build()
+        try carpenter.build()
 
         let keychain = try carpenter.get(Dependency.keychain)
         XCTAssertEqual(keychain.i, 10)
@@ -439,7 +439,7 @@ final class CarpenterTests: XCTestCase {
         try carpenter.add(Dependency.cycleC)
 
         try await XCTAssertThrowsAsync(
-            try await carpenter.build()
+            try carpenter.build()
         ) { error in
             let carpenterError = try XCTUnwrap(error as? CarpenterError)
             XCTAssertEqual(carpenterError, .dependencyCyclesDetected(cycles: [
@@ -458,7 +458,7 @@ final class CarpenterTests: XCTestCase {
         try carpenter.add(Factory(ApiClient.init)  { (_, _: AuthClient) in })
 
         try await XCTAssertThrowsAsync(
-            try await carpenter.build()
+            try carpenter.build()
         ) { error in
             let carpenterError = try XCTUnwrap(error as? CarpenterError)
             XCTAssertEqual(carpenterError, .lateInitCyclesDetected(cycles: [

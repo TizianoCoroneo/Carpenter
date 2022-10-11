@@ -19,28 +19,28 @@
 ///```
 ///
 public struct Factory<Requirement, LateRequirement, Product>: FactoryConvertible {
-    var builder: (Requirement) async throws -> Product
-    var lateInit: (inout Product, LateRequirement) async throws -> Void
+    var builder: (Requirement) throws -> Product
+    var lateInit: (inout Product, LateRequirement) throws -> Void
 
     public init(
-        _ builder: @escaping (Requirement) async throws -> Product,
-        lateInit: @escaping (inout Product, LateRequirement) async throws -> Void
+        _ builder: @escaping (Requirement) throws -> Product,
+        lateInit: @escaping (inout Product, LateRequirement) throws -> Void
     ) {
         self.builder = builder
         self.lateInit = lateInit
     }
 
     public init(
-        _ builder: @escaping (Requirement) async throws -> Product,
-        lateInit: @escaping (inout Product) async throws -> Void
+        _ builder: @escaping (Requirement) throws -> Product,
+        lateInit: @escaping (inout Product) throws -> Void
     ) where LateRequirement == Void {
         self.init(
             builder,
-            lateInit: { (x, _: Void) in try await lateInit(&x) })
+            lateInit: { (x, _: Void) in try lateInit(&x) })
     }
 
     public init(
-        _ builder: @escaping (Requirement) async throws -> Product
+        _ builder: @escaping (Requirement) throws -> Product
     ) where LateRequirement == Void {
         self.init(
             builder,
@@ -61,7 +61,7 @@ public struct Factory<Requirement, LateRequirement, Product>: FactoryConvertible
                         type: String(describing: type(of: $0)))
                 }
 
-                return try await self.builder(requirement)
+                return try self.builder(requirement)
             },
             lateInit: {
                 guard var product = $0 as? Product
@@ -79,7 +79,7 @@ public struct Factory<Requirement, LateRequirement, Product>: FactoryConvertible
                         type: String(describing: type(of: $0)))
                 }
 
-                try await self.lateInit(&product, requirement)
+                try self.lateInit(&product, requirement)
                 $0 = product
             })
     }
@@ -94,8 +94,8 @@ public struct AnyFactory {
         requirementName: String,
         lateRequirementName: String,
         resultName: String,
-        builder: @escaping (Any) async throws -> Any,
-        lateInit: @escaping (inout Any, Any) async throws -> Void
+        builder: @escaping (Any) throws -> Any,
+        lateInit: @escaping (inout Any, Any) throws -> Void
     ) {
         self.requirementName = requirementName
         self.lateRequirementName = lateRequirementName
@@ -108,6 +108,6 @@ public struct AnyFactory {
     let lateRequirementName: String
     let resultName: String
 
-    let builder: (Any) async throws -> Any
-    let lateInit: (inout Any, Any) async throws -> Void
+    let builder: (Any) throws -> Any
+    let lateInit: (inout Any, Any) throws -> Void
 }

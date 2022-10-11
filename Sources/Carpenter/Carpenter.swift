@@ -33,17 +33,17 @@ public struct Carpenter {
         try self.add(factory.eraseToAnyFactory())
     }
 
-    public mutating func build() async throws {
+    public mutating func build() throws {
         try finalizeGraph()
 
         guard let sortedVertices = dependencyGraph.topologicalSort()
         else { throw E.dependencyCyclesDetected(cycles: dependencyGraph.detectCycles()) }
 
         for vertex in sortedVertices where !builtProductsRegistry.keys.contains(vertex) {
-            self.builtProductsRegistry[vertex] = try await self.build(vertex)
+            self.builtProductsRegistry[vertex] = try self.build(vertex)
         }
 
-        try await executeLateInitialization()
+        try executeLateInitialization()
     }
 
     public func get<Requirement, LateInit, Product>(
@@ -82,7 +82,7 @@ public struct Carpenter {
 
     private func build(
         _ vertex: String
-    ) async throws -> Any {
+    ) throws -> Any {
         guard let requirements = requirementsByResultName[vertex]
         else { throw E.cannotRetrieveRequirementsForProduct(name: vertex) }
 
@@ -95,19 +95,19 @@ public struct Carpenter {
 
         switch requirements.count {
         case 0:
-            result = try await factory(())
+            result = try factory(())
 
         case 1:
             guard let dependency = builtProductsRegistry[requirements[0]]
             else { throw E.builtProductNotFoundForVertex(name: requirements[0]) }
-            result = try await factory(dependency)
+            result = try factory(dependency)
 
         case 2:
             guard let dependency1 = builtProductsRegistry[requirements[0]]
             else { throw E.builtProductNotFoundForVertex(name: requirements[0]) }
             guard let dependency2 = builtProductsRegistry[requirements[1]]
             else { throw E.builtProductNotFoundForVertex(name: requirements[1]) }
-            result = try await factory((dependency1, dependency2))
+            result = try factory((dependency1, dependency2))
 
         case 3:
             guard let dependency1 = builtProductsRegistry[requirements[0]]
@@ -116,7 +116,7 @@ public struct Carpenter {
             else { throw E.builtProductNotFoundForVertex(name: requirements[1]) }
             guard let dependency3 = builtProductsRegistry[requirements[2]]
             else { throw E.builtProductNotFoundForVertex(name: requirements[2]) }
-            result = try await factory((dependency1, dependency2, dependency3))
+            result = try factory((dependency1, dependency2, dependency3))
 
         case 4:
             guard let dependency1 = builtProductsRegistry[requirements[0]]
@@ -127,7 +127,7 @@ public struct Carpenter {
             else { throw E.builtProductNotFoundForVertex(name: requirements[2]) }
             guard let dependency4 = builtProductsRegistry[requirements[3]]
             else { throw E.builtProductNotFoundForVertex(name: requirements[3]) }
-            result = try await factory((dependency1, dependency2, dependency3, dependency4))
+            result = try factory((dependency1, dependency2, dependency3, dependency4))
 
         case 5:
             guard let dependency1 = builtProductsRegistry[requirements[0]]
@@ -140,7 +140,7 @@ public struct Carpenter {
             else { throw E.builtProductNotFoundForVertex(name: requirements[3]) }
             guard let dependency5 = builtProductsRegistry[requirements[4]]
             else { throw E.builtProductNotFoundForVertex(name: requirements[4]) }
-            result = try await factory((dependency1, dependency2, dependency3, dependency4, dependency5))
+            result = try factory((dependency1, dependency2, dependency3, dependency4, dependency5))
 
         case 6:
             guard let dependency1 = builtProductsRegistry[requirements[0]]
@@ -155,7 +155,7 @@ public struct Carpenter {
             else { throw E.builtProductNotFoundForVertex(name: requirements[4]) }
             guard let dependency6 = builtProductsRegistry[requirements[5]]
             else { throw E.builtProductNotFoundForVertex(name: requirements[5]) }
-            result = try await factory((dependency1, dependency2, dependency3, dependency4, dependency5, dependency6))
+            result = try factory((dependency1, dependency2, dependency3, dependency4, dependency5, dependency6))
 
         default:
             throw E.factoryBuilderHasTooManyArguments(name: vertex, count: requirements.count)
@@ -164,16 +164,16 @@ public struct Carpenter {
         return result
     }
 
-    private mutating func executeLateInitialization() async throws {
+    private mutating func executeLateInitialization() throws {
         guard let sortedVertices = lateInitDependencyGraph.topologicalSort()
         else { throw E.lateInitCyclesDetected(cycles: lateInitDependencyGraph.detectCycles()) }
 
         for vertex in sortedVertices {
-            self.builtProductsRegistry[vertex] = try await self.lateInitialize(vertex)
+            self.builtProductsRegistry[vertex] = try self.lateInitialize(vertex)
         }
     }
 
-    private func lateInitialize(_ vertex: String) async throws -> Any {
+    private func lateInitialize(_ vertex: String) throws -> Any {
         guard var product = builtProductsRegistry[vertex]
         else { throw E.builtProductNotFoundForVertex(name: vertex) }
 
@@ -187,19 +187,19 @@ public struct Carpenter {
 
         switch requirements.count {
         case 0:
-            try await setup(&product, ())
+            try setup(&product, ())
 
         case 1:
             guard let dependency = builtProductsRegistry[requirements[0]]
             else { throw E.builtProductNotFoundForVertex(name: requirements[0]) }
-            try await setup(&product, dependency)
+            try setup(&product, dependency)
 
         case 2:
             guard let dependency1 = builtProductsRegistry[requirements[0]]
             else { throw E.builtProductNotFoundForVertex(name: requirements[0]) }
             guard let dependency2 = builtProductsRegistry[requirements[1]]
             else { throw E.builtProductNotFoundForVertex(name: requirements[1]) }
-            try await setup(&product, (dependency1, dependency2))
+            try setup(&product, (dependency1, dependency2))
 
         case 3:
             guard let dependency1 = builtProductsRegistry[requirements[0]]
@@ -208,7 +208,7 @@ public struct Carpenter {
             else { throw E.builtProductNotFoundForVertex(name: requirements[1]) }
             guard let dependency3 = builtProductsRegistry[requirements[2]]
             else { throw E.builtProductNotFoundForVertex(name: requirements[2]) }
-            try await setup(&product, (dependency1, dependency2, dependency3))
+            try setup(&product, (dependency1, dependency2, dependency3))
 
         case 4:
             guard let dependency1 = builtProductsRegistry[requirements[0]]
@@ -219,7 +219,7 @@ public struct Carpenter {
             else { throw E.builtProductNotFoundForVertex(name: requirements[2]) }
             guard let dependency4 = builtProductsRegistry[requirements[3]]
             else { throw E.builtProductNotFoundForVertex(name: requirements[3]) }
-            try await setup(&product, (dependency1, dependency2, dependency3, dependency4))
+            try setup(&product, (dependency1, dependency2, dependency3, dependency4))
 
         case 5:
             guard let dependency1 = builtProductsRegistry[requirements[0]]
@@ -232,7 +232,7 @@ public struct Carpenter {
             else { throw E.builtProductNotFoundForVertex(name: requirements[3]) }
             guard let dependency5 = builtProductsRegistry[requirements[4]]
             else { throw E.builtProductNotFoundForVertex(name: requirements[4]) }
-            try await setup(&product, (dependency1, dependency2, dependency3, dependency4, dependency5))
+            try setup(&product, (dependency1, dependency2, dependency3, dependency4, dependency5))
 
         case 6:
             guard let dependency1 = builtProductsRegistry[requirements[0]]
@@ -247,7 +247,7 @@ public struct Carpenter {
             else { throw E.builtProductNotFoundForVertex(name: requirements[4]) }
             guard let dependency6 = builtProductsRegistry[requirements[5]]
             else { throw E.builtProductNotFoundForVertex(name: requirements[5]) }
-            try await setup(&product, (dependency1, dependency2, dependency3, dependency4, dependency5, dependency6))
+            try setup(&product, (dependency1, dependency2, dependency3, dependency4, dependency5, dependency6))
 
         default:
             throw E.factoryLateInitHasTooManyArguments(name: vertex, count: requirements.count)

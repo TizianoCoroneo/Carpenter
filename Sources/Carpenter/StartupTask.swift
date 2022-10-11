@@ -1,13 +1,13 @@
 
 public struct StartupTask<Requirement, LateRequirement>: FactoryConvertible {
     let name: String
-    var builder: (Requirement) async throws -> Void
-    var lateInit: (LateRequirement) async throws -> Void
+    var builder: (Requirement) throws -> Void
+    var lateInit: (LateRequirement) throws -> Void
 
     public init(
         _ name: String,
-        _ builder: @escaping (Requirement) async throws -> Void,
-        lateInit: @escaping (LateRequirement) async throws -> Void
+        _ builder: @escaping (Requirement) throws -> Void,
+        lateInit: @escaping (LateRequirement) throws -> Void
     ) {
         self.name = name
         self.builder = builder
@@ -16,7 +16,7 @@ public struct StartupTask<Requirement, LateRequirement>: FactoryConvertible {
 
     public init(
         _ name: String,
-        lateInit: @escaping (LateRequirement) async throws -> Void
+        lateInit: @escaping (LateRequirement) throws -> Void
     ) where Requirement == Void {
         self.init(
             name,
@@ -26,7 +26,7 @@ public struct StartupTask<Requirement, LateRequirement>: FactoryConvertible {
 
     public init(
         _ name: String,
-        _ builder: @escaping (Requirement) async throws -> Void
+        _ builder: @escaping (Requirement) throws -> Void
     ) where LateRequirement == Void {
         self.init(
             name,
@@ -48,7 +48,7 @@ public struct StartupTask<Requirement, LateRequirement>: FactoryConvertible {
                         type: String(describing: type(of: $0)))
                 }
 
-                return try await self.builder(requirement)
+                return try self.builder(requirement)
             },
             lateInit: {
                 guard let requirement = $1 as? LateRequirement
@@ -59,7 +59,7 @@ public struct StartupTask<Requirement, LateRequirement>: FactoryConvertible {
                         type: String(describing: type(of: $0)))
                 }
 
-                try await self.lateInit(requirement);
+                try self.lateInit(requirement);
             })
     }
 }

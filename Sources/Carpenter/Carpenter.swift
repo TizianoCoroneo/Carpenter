@@ -270,7 +270,7 @@ public struct Carpenter {
 
             for requirement in requirementsNames {
                 guard let requirementIndex = dependencyGraph.indexOfVertex(requirement)
-                else { throw E.requirementNotFound(name: String(requirement)) }
+                else { throw E.requirementNotFound(name: String(requirement), requestedBy: productName) }
 
                 dependencyGraph.addEdge(
                     UnweightedEdge(u: requirementIndex, v: productIndex, directed: true),
@@ -284,7 +284,7 @@ public struct Carpenter {
 
             for requirement in requirementsNames {
                 guard let requirementIndex = lateInitDependencyGraph.indexOfVertex(requirement)
-                else { throw E.requirementNotFoundForLateInitialization(name: String(requirement)) }
+                else { throw E.requirementNotFoundForLateInitialization(name: String(requirement), requestedBy: productName) }
 
                 lateInitDependencyGraph.addEdge(
                     UnweightedEdge(u: requirementIndex, v: productIndex, directed: true),
@@ -307,8 +307,8 @@ private func splitRequirements(_ requirementName: String) -> [String] {
 }
 
 public enum CarpenterError: Error, Equatable, CustomStringConvertible {
-    case requirementNotFound(name: String)
-    case requirementNotFoundForLateInitialization(name: String)
+    case requirementNotFound(name: String, requestedBy: String)
+    case requirementNotFoundForLateInitialization(name: String, requestedBy: String)
     case requirementHasMismatchingType(resultName: String, expected: String, type: String)
     case lateRequirementHasMismatchingType(resultName: String, expected: String, type: String)
     case cannotRetrieveRequirementsForProduct(name: String)
@@ -327,10 +327,10 @@ public enum CarpenterError: Error, Equatable, CustomStringConvertible {
 
     public var description: String {
         switch self {
-        case let .requirementNotFound(name):
-            return "Requirement \"\(name)\" not found in builder graph."
-        case let .requirementNotFoundForLateInitialization(name):
-            return "Requirement \"\(name)\" not found in late initialization graph."
+        case let .requirementNotFound(name, requestedBy):
+            return "Requirement \"\(name)\" not found in builder graph; requested by \(requestedBy)."
+        case let .requirementNotFoundForLateInitialization(name, requestedBy):
+            return "Requirement \"\(name)\" not found in late initialization graph; requested by \(requestedBy)."
         case let .requirementHasMismatchingType(resultName, expected, type):
             return "Requirement for product \"\(resultName)\" has wrong type: expected \"\(expected)\", found \"\(type)\"."
         case let .lateRequirementHasMismatchingType(resultName, expected, type):

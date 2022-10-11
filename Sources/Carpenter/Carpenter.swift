@@ -1,5 +1,9 @@
 import SwiftGraph
 
+protocol DependencyKey {
+    var name: String { get }
+}
+
 public struct Carpenter {
 
     public static var shared: Carpenter = .init()

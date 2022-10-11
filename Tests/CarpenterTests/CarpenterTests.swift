@@ -231,6 +231,36 @@ final class CarpenterTests: XCTestCase {
         let _: ThreeDependenciesObject = try carpenter.get(Dependency.threeDependenciesObject)
     }
 
+    func test_BuildProductsInTwoPhases() async throws {
+        var carpenter = Carpenter()
+
+        try carpenter.add(Dependency.i)
+        try carpenter.add(Dependency.keychain)
+        try carpenter.add(Dependency.authClient)
+
+        try await carpenter.build()
+
+        let keychain = try carpenter.get(Dependency.keychain)
+        let authClient = try carpenter.get(Dependency.authClient)
+
+        try carpenter.add(Dependency.urlSession)
+        try carpenter.add(Dependency.apiClient)
+        try carpenter.add(Dependency.threeDependenciesObject)
+
+        try await carpenter.build()
+
+        let keychain2 = try carpenter.get(Dependency.keychain)
+        let authClient2 = try carpenter.get(Dependency.authClient)
+
+        // Keychain and authClient do not get rebuilt
+        XCTAssertIdentical(keychain, keychain2)
+        XCTAssertIdentical(authClient, authClient2)
+
+        let _: Session = try carpenter.get(Dependency.urlSession)
+        let _: AuthClient = try carpenter.get(Dependency.authClient)
+        let _: ThreeDependenciesObject = try carpenter.get(Dependency.threeDependenciesObject)
+    }
+
     func test_BuildProductsWithResultBuilder() async throws {
         var carpenter = try Carpenter {
             Dependency.i

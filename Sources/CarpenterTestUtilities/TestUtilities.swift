@@ -53,7 +53,7 @@ public enum Dependency {
 
 // MARK: - Example data structures
 
-public struct Keychain {
+public class Keychain {
     public var i: Int
 
     public init(i: Int) {
@@ -65,7 +65,7 @@ public struct Session {
     public static let shared = Session()
 }
 
-public struct AuthClient {
+public class AuthClient {
     public let keychain: Keychain
     public var i: Int
 

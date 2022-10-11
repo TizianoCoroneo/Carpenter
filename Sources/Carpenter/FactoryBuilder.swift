@@ -2,16 +2,10 @@
 @resultBuilder
 public struct FactoryBuilder {
 
-    public static func buildExpression<Requirement, LateRequirement, Product>(
-        _ factory: Factory<Requirement, LateRequirement, Product>
+    public static func buildExpression(
+        _ value: some FactoryConvertible
     ) -> AnyFactory {
-        factory.eraseToAnyFactory()
-    }
-
-    public static func buildExpression<Requirement, LateRequirement>(
-        _ task: StartupTask<Requirement, LateRequirement>
-    ) -> AnyFactory {
-        task.eraseToAnyFactory()
+        value.eraseToAnyFactory()
     }
 
     public static func buildBlock(_ components: AnyFactory...) -> [AnyFactory] {

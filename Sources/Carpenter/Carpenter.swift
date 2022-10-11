@@ -288,17 +288,17 @@ public struct Carpenter {
             }
         }
     }
+}
 
-    private func splitRequirements(_ requirementName: String) -> [String] {
-        if requirementName != String(describing: Void.self) {
-            let requirements = requirementName.trimmingCharacters(in: .init(["(", ")"]))
+private func splitRequirements(_ requirementName: String) -> [String] {
+    if requirementName != String(describing: Void.self) {
+        let requirements = requirementName.trimmingCharacters(in: .init(["(", ")"]))
 
-            return requirements
-                .split(separator: ",")
-                .map { $0.trimmingCharacters(in: .whitespaces) }
-        } else {
-            return []
-        }
+        return requirements
+            .split(separator: ",")
+            .map { $0.trimmingCharacters(in: .whitespaces) }
+    } else {
+        return []
     }
 }
 

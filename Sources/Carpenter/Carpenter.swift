@@ -419,12 +419,12 @@ public enum CarpenterError: Error, Equatable, CustomStringConvertible {
         case let .dependencyCyclesDetected(cycles):
             return """
             Cycles detected in dependency graph:
-            \(cycles.reversed().map { $0.joined(separator: " -> ") }.joined(separator: "\n"))
+            \(cycles.map { $0.joined(separator: " -> ") }.joined(separator: "\n"))
             """
         case let .lateInitCyclesDetected(cycles):
             return """
             Cycles detected in late initialization graph:
-            \(cycles.reversed().map { $0.joined(separator: " -> ") }.joined(separator: "\n"))
+            \(cycles.map { $0.joined(separator: " -> ") }.joined(separator: "\n"))
             """
         }
     }

@@ -71,8 +71,8 @@ public struct Carpenter {
         guard !lateRequirementsByResultName.keys.contains(factory.resultName)
         else { throw E.factoryAlreadyAdded(name: factory.resultName) }
 
-        requirementsByResultName[factory.resultName] = splitRequirements(factory.requirementName)
-        lateRequirementsByResultName[factory.resultName] = splitRequirements(factory.lateRequirementName)
+        requirementsByResultName[factory.resultName] = splitTupleContent(factory.requirementName)
+        lateRequirementsByResultName[factory.resultName] = splitTupleContent(factory.lateRequirementName)
 
         _ = dependencyGraph.addVertex(factory.resultName)
         _ = lateInitDependencyGraph.addVertex(factory.resultName)
@@ -294,16 +294,46 @@ public struct Carpenter {
     }
 }
 
-private func splitRequirements(_ requirementName: String) -> [String] {
-    if requirementName != String(describing: Void.self) {
-        let requirements = requirementName.trimmingCharacters(in: .init(["(", ")"]))
+func splitTupleContent(_ tupleContent: String) -> [String] {
+    guard tupleContent != String(describing: Void.self) else { return [] }
 
-        return requirements
-            .split(separator: ",")
-            .map { $0.trimmingCharacters(in: .whitespaces) }
-    } else {
-        return []
+    var tupleContent = tupleContent
+
+    if tupleContent.hasPrefix("(") { tupleContent.removeFirst() }
+    if tupleContent.hasSuffix(")") { tupleContent.removeLast() }
+
+    var angleBracketCount = 0
+    var curlyBracketCount = 0
+    var squareBracketCount = 0
+    var roundBracketCount = 0
+
+    var splitted: [String] = []
+    var lastAddedIndex = tupleContent.startIndex
+
+    for i in tupleContent.indices {
+        switch (tupleContent[i]) {
+        case "(": roundBracketCount += 1
+        case ")": roundBracketCount -= 1
+        case "[": squareBracketCount += 1
+        case "]": squareBracketCount -= 1
+        case "{": curlyBracketCount += 1
+        case "}": curlyBracketCount -= 1
+        case "<": angleBracketCount += 1
+        case ">": angleBracketCount -= 1
+        case ",":
+            if (roundBracketCount + squareBracketCount + curlyBracketCount + angleBracketCount == 0) {
+                splitted.append(String(tupleContent[lastAddedIndex..<i])
+                    .trimmingCharacters(in: .whitespaces))
+                lastAddedIndex = tupleContent.index(after: i)
+            }
+        default: break
+        }
     }
+
+    splitted.append(String(tupleContent[lastAddedIndex..<tupleContent.endIndex])
+        .trimmingCharacters(in: .whitespaces))
+
+    return splitted
 }
 
 public enum CarpenterError: Error, Equatable, CustomStringConvertible {

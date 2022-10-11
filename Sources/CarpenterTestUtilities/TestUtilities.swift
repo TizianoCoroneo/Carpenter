@@ -29,6 +29,23 @@ public enum Dependency {
     public static var cycleB = Factory(CycleB.init)
     public static var cycleC = Factory(CycleC.init)
 
+    public static let array = Factory {
+        [1, 2, 3]
+    }
+
+    public static let dictionary = Factory {
+        ["a": 1, "b": 2, "c": 3]
+    }
+
+    public static let consumeArrayAndDictionary = Factory { (a: [Int], b: [String: Int]) in
+        TestGeneric(a: a, b: b)
+    }
+
+    public struct TestGeneric<A, B> {
+        let a: A
+        let b: B
+    }
+
     public static func startupTask1(exp: XCTestExpectation) -> StartupTask<ApiClient, Void> {
         StartupTask("Task 1", { (x: ApiClient) in
             exp.fulfill()

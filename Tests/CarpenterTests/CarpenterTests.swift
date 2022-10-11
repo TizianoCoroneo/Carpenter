@@ -4,6 +4,42 @@ import CarpenterTestUtilities
 
 final class CarpenterTests: XCTestCase {
 
+    func test_splitRequirements_simple() throws {
+        let test = "ApiClient"
+        let splitted = splitTupleContent(test)
+        XCTAssertEqual(splitted, ["ApiClient"])
+    }
+
+    func test_splitRequirements_array() throws {
+        let test = "[ApiClient]"
+        let splitted = splitTupleContent(test)
+        XCTAssertEqual(splitted, ["[ApiClient]"])
+    }
+
+    func test_splitRequirements_dictionary() throws {
+        let test = "[ApiClient: String]"
+        let splitted = splitTupleContent(test)
+        XCTAssertEqual(splitted, ["[ApiClient: String]"])
+    }
+
+    func test_splitRequirements_tuple() throws {
+        let test = "(String, Int)"
+        let splitted = splitTupleContent(test)
+        XCTAssertEqual(splitted, ["String", "Int"])
+    }
+
+    func test_splitRequirements_nestedTuple() throws {
+        let test = "((String, Int), (String, Double))"
+        let splitted = splitTupleContent(test)
+        XCTAssertEqual(splitted, ["(String, Int)", "(String, Double)"])
+    }
+
+    func test_splitRequirements_complexType() throws {
+        let test = "(Dictionary[String: (String, Int)], Dictionary[(String, Int): Double], Array[(Int, Int, Int)])"
+        let splitted = splitTupleContent(test)
+        XCTAssertEqual(splitted, ["Dictionary[String: (String, Int)]", "Dictionary[(String, Int): Double]", "Array[(Int, Int, Int)]"])
+    }
+
     func test_AddingDependeciesInOrder() async throws {
         var carpenter = Carpenter()
 
@@ -208,6 +244,26 @@ final class CarpenterTests: XCTestCase {
 
         XCTAssertEqual(carpenter.dependencyGraph.vertexCount, 6)
         XCTAssertEqual(carpenter.dependencyGraph.edgeCount, 9)
+
+        print(carpenter.dependencyGraph.description)
+    }
+
+    func test_AddingDependeciesWithGenericTypes() throws {
+        let carpenter = try Carpenter {
+            Dependency.array
+            Dependency.dictionary
+            Dependency.consumeArrayAndDictionary
+        }
+
+        XCTAssertVertexExists(carpenter, name: "Array<Int>")
+        XCTAssertVertexExists(carpenter, name: "Dictionary<String, Int>")
+        XCTAssertVertexExists(carpenter, name: "TestGeneric<Array<Int>, Dictionary<String, Int>>")
+
+        XCTAssertEdgeExists(carpenter, from: "Array<Int>", to: "TestGeneric<Array<Int>, Dictionary<String, Int>>")
+        XCTAssertEdgeExists(carpenter, from: "Dictionary<String, Int>", to: "TestGeneric<Array<Int>, Dictionary<String, Int>>")
+
+        XCTAssertEqual(carpenter.dependencyGraph.vertexCount, 3)
+        XCTAssertEqual(carpenter.dependencyGraph.edgeCount, 2)
 
         print(carpenter.dependencyGraph.description)
     }

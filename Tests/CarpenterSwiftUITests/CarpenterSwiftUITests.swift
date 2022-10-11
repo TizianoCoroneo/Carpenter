@@ -34,7 +34,7 @@ final class CarpenterSwiftUITests: XCTestCase {
             Dependency.apiClient
         }
 
-        try await Carpenter.shared.build()
+        try Carpenter.shared.build()
 
         _ = Environment(\.apiClient).wrappedValue
     }

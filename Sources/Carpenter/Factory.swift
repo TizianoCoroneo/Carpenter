@@ -89,7 +89,7 @@ public protocol FactoryConvertible {
     func eraseToAnyFactory() -> AnyFactory
 }
 
-public struct AnyFactory {
+public struct AnyFactory: FactoryConvertible {
     public init(
         requirementName: String,
         lateRequirementName: String,
@@ -110,4 +110,8 @@ public struct AnyFactory {
 
     let builder: (Any) throws -> Any
     let lateInit: (inout Any, Any) throws -> Void
+
+    public func eraseToAnyFactory() -> AnyFactory {
+        self
+    }
 }

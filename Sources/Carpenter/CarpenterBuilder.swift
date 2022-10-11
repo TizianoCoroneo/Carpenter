@@ -27,15 +27,4 @@ public struct FactoryBuilder {
     public static func buildLimitedAvailability(_ component: [AnyFactory]) -> [AnyFactory] {
         component
     }
-
-    public static func buildFinalResult(_ components: [AnyFactory]) -> Result<Carpenter, Error> {
-        Result {
-            var c = Carpenter()
-            for component in components {
-                try c.add(component)
-            }
-            try c.finalizeGraph()
-            return c
-        }
-    }
 }

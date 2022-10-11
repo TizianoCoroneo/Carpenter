@@ -1,9 +1,5 @@
 import SwiftGraph
 
-protocol DependencyKey {
-    var name: String { get }
-}
-
 public struct Carpenter {
 
     public static var shared: Carpenter = .init()
@@ -23,14 +19,33 @@ public struct Carpenter {
 
     public init() {}
 
-    public init(@FactoryBuilder _ factoryBuilder: () -> Result<Carpenter, Error>) throws {
-        self = try factoryBuilder().get()
+    public init(@FactoryBuilder _ factoryBuilder: () -> [AnyFactory]) throws {
+        self.init()
+        let factories = factoryBuilder()
+
+        for factory in factories {
+            try self.add(factory)
+        }
+
+        try finalizeGraph()
     }
 
     public mutating func add(
         _ factory: some FactoryConvertible
     ) throws {
         try self.add(factory.eraseToAnyFactory())
+    }
+
+    public mutating func add(
+        @FactoryBuilder _ factories: () -> [AnyFactory]
+    ) throws {
+        let factories = factories()
+
+        for factory in factories {
+            try self.add(factory)
+        }
+
+        try finalizeGraph()
     }
 
     public mutating func build() throws {

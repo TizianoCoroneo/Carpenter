@@ -48,14 +48,14 @@ class DotCarpenterVisualizeTests: XCTestCase {
             Dependency.keychain
             Dependency.authClient
             Dependency.urlSession
-            Factory(ApiClient.init) { (x: inout ApiClient, k: SixDependenciesObject) in
-                x.i = k.i * 3
+            Factory(ApiClient.init) { (x: inout ApiClient, k: (SixDependenciesObject, FiveDependenciesObject)) in
+                x.i = k.0.i * 3
             }
             Dependency.threeDependenciesObject
             Dependency.fourDependenciesObject
             Dependency.fiveDependenciesObject
             Dependency.sixDependenciesObject
-        }
+        } 
 
         try await save(
             name: "Build dependencies.jpg",

@@ -19,6 +19,7 @@
 ///```
 ///
 public struct Factory<Requirement, LateRequirement, Product>: FactoryConvertible {
+    var key: DependencyKey<Product>
     var builder: (Requirement) throws -> Product
     var lateInit: (inout Product, LateRequirement) throws -> Void
 
@@ -26,6 +27,7 @@ public struct Factory<Requirement, LateRequirement, Product>: FactoryConvertible
         _ builder: @escaping (Requirement) throws -> Product,
         lateInit: @escaping (inout Product, LateRequirement) throws -> Void
     ) {
+        self.key = DependencyKey<Product>()
         self.builder = builder
         self.lateInit = lateInit
     }
@@ -49,6 +51,7 @@ public struct Factory<Requirement, LateRequirement, Product>: FactoryConvertible
 
     public func eraseToAnyFactory() -> AnyFactory {
         AnyFactory(
+            key: DependencyKey<Product>(),
             requirementName: String(describing: Requirement.self),
             lateRequirementName: String(describing: LateRequirement.self),
             resultName: String(describing: Product.self),
@@ -90,7 +93,8 @@ public protocol FactoryConvertible {
 }
 
 public struct AnyFactory: FactoryConvertible {
-    public init(
+    public init<Product>(
+        key: DependencyKey<Product>,
         requirementName: String,
         lateRequirementName: String,
         resultName: String,
@@ -100,6 +104,7 @@ public struct AnyFactory: FactoryConvertible {
         self.requirementName = requirementName
         self.lateRequirementName = lateRequirementName
         self.resultName = resultName
+        self.keyName = key.name
         self.builder = builder
         self.lateInit = lateInit
     }
@@ -107,6 +112,7 @@ public struct AnyFactory: FactoryConvertible {
     let requirementName: String
     let lateRequirementName: String
     let resultName: String
+    let keyName: String
 
     let builder: (Any) throws -> Any
     let lateInit: (inout Any, Any) throws -> Void

@@ -5,6 +5,7 @@ import XCTest
 // MARK: - Factories
 
 public enum Dependency {
+
     public static var i = Factory { 0 }
 
     public static var keychain = Factory(Keychain.init) { (x: inout Keychain) in
@@ -47,24 +48,24 @@ public enum Dependency {
     }
 
     public static func startupTask1(exp: XCTestExpectation) -> StartupTask<ApiClient, Void> {
-        StartupTask("Task 1", { (x: ApiClient) in
+        StartupTask("Task 1") { (x: ApiClient) in
             exp.fulfill()
             print("Ran task 1")
-        })
+        }
     }
 
     public static func startupTask2(exp: XCTestExpectation) -> StartupTask<Session, Void> {
-        StartupTask("Task 2", { (x: Session) in
+        StartupTask("Task 2") { (x: Session) in
             exp.fulfill()
             print("Ran task 2")
-        })
+        }
     }
 
     public static func startupTask3(exp: XCTestExpectation) -> StartupTask<AuthClient, Void> {
-        StartupTask("Task 3", { (x: AuthClient) in
+        StartupTask("Task 3") { (x: AuthClient) in
             exp.fulfill()
             print("Ran task 3")
-        })
+        }
     }
 }
 

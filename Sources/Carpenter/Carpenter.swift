@@ -1,5 +1,17 @@
 import SwiftGraph
 
+public struct DependencyKey<Product> {
+    let name: String
+
+    init(name: String) {
+        self.name = name
+    }
+
+    public init() {
+        self.init(name: String(describing: Product.self))
+    }
+}
+
 public struct Carpenter {
 
     public static var shared: Carpenter = .init()
@@ -61,10 +73,10 @@ public struct Carpenter {
         try executeLateInitialization()
     }
 
-    public func get<Requirement, LateInit, Product>(
-        _ dependency: Factory<Requirement, LateInit, Product>
+    public func get<Product>(
+        _ dependencyKey: DependencyKey<Product>
     ) throws -> Product {
-        let name = String(describing: Product.self)
+        let name = dependencyKey.name
 
         guard let result = self.builtProductsRegistry[name]
         else { throw E.productNotFound(name: name) }
@@ -75,24 +87,30 @@ public struct Carpenter {
         return typedResult
     }
 
+    public func get<Requirements, LateRequirements, Product>(
+        _ factory: Factory<Requirements, LateRequirements, Product>
+    ) throws -> Product {
+        try self.get(DependencyKey<Product>())
+    }
+
     // MARK: - Internal / Private
 
     mutating func add(
         _ factory: AnyFactory
     ) throws {
-        guard !requirementsByResultName.keys.contains(factory.resultName)
-        else { throw E.factoryAlreadyAdded(name: factory.resultName) }
+        guard !requirementsByResultName.keys.contains(factory.keyName)
+        else { throw E.factoryAlreadyAdded(name: factory.keyName) }
 
-        guard !lateRequirementsByResultName.keys.contains(factory.resultName)
-        else { throw E.factoryAlreadyAdded(name: factory.resultName) }
+        guard !lateRequirementsByResultName.keys.contains(factory.keyName)
+        else { throw E.factoryAlreadyAdded(name: factory.keyName) }
 
-        requirementsByResultName[factory.resultName] = splitTupleContent(factory.requirementName)
-        lateRequirementsByResultName[factory.resultName] = splitTupleContent(factory.lateRequirementName)
+        requirementsByResultName[factory.keyName] = splitTupleContent(factory.requirementName)
+        lateRequirementsByResultName[factory.keyName] = splitTupleContent(factory.lateRequirementName)
 
-        _ = dependencyGraph.addVertex(factory.resultName)
-        _ = lateInitDependencyGraph.addVertex(factory.resultName)
+        _ = dependencyGraph.addVertex(factory.keyName)
+        _ = lateInitDependencyGraph.addVertex(factory.keyName)
 
-        factoryRegistry[factory.resultName] = factory
+        factoryRegistry[factory.keyName] = factory
     }
 
     private func build(

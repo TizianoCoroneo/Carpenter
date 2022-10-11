@@ -5,7 +5,7 @@ import CarpenterTestUtilities
 import SwiftUI
 
 struct ApiClientEnvironementKey: CarpenterEnvironmentKey {
-    static let defaultFactory = Dependency.apiClient
+    static let key = DependencyKey<ApiClient>()
 }
 
 extension EnvironmentValues {

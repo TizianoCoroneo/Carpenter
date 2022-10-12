@@ -210,6 +210,13 @@ public class CycleC {
     }
 }
 
+// MARK: - Files
+
+public extension Bundle {
+    static let buildGraphURL = Bundle.module.url(forResource: "BuildGraph", withExtension: "json")!
+    static let lateInitGraphURL = Bundle.module.url(forResource: "LateInitGraph", withExtension: "json")!
+}
+
 // MARK: - Assertions
 
 public func XCTAssertThrowsAsync<T>(

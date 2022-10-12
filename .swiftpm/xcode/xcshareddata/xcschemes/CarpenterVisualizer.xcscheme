@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Scheme
-   LastUpgradeVersion = "1410"
+   LastUpgradeVersion = "1400"
    version = "1.3">
    <BuildAction
       parallelizeBuildables = "YES"
@@ -14,9 +14,23 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "CarpenterVisualize"
-               BuildableName = "CarpenterVisualize"
-               BlueprintName = "CarpenterVisualize"
+               BlueprintIdentifier = "CarpenterVisualizer"
+               BuildableName = "CarpenterVisualizer"
+               BlueprintName = "CarpenterVisualizer"
+               ReferencedContainer = "container:">
+            </BuildableReference>
+         </BuildActionEntry>
+         <BuildActionEntry
+            buildForTesting = "YES"
+            buildForRunning = "YES"
+            buildForProfiling = "NO"
+            buildForArchiving = "NO"
+            buildForAnalyzing = "YES">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "CarpenterVisualizerTests"
+               BuildableName = "CarpenterVisualizerTests"
+               BlueprintName = "CarpenterVisualizerTests"
                ReferencedContainer = "container:">
             </BuildableReference>
          </BuildActionEntry>
@@ -32,9 +46,9 @@
             skipped = "NO">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "CarpenterVisualizeTests"
-               BuildableName = "CarpenterVisualizeTests"
-               BlueprintName = "CarpenterVisualizeTests"
+               BlueprintIdentifier = "CarpenterVisualizerTests"
+               BuildableName = "CarpenterVisualizerTests"
+               BlueprintName = "CarpenterVisualizerTests"
                ReferencedContainer = "container:">
             </BuildableReference>
          </TestableReference>
@@ -49,10 +63,29 @@
       ignoresPersistentStateOnLaunch = "NO"
       debugDocumentVersioning = "YES"
       debugServiceExtension = "internal"
-      allowLocationSimulation = "YES">
+      allowLocationSimulation = "YES"
+      viewDebuggingEnabled = "No">
+      <BuildableProductRunnable
+         runnableDebuggingMode = "0">
+         <BuildableReference
+            BuildableIdentifier = "primary"
+            BlueprintIdentifier = "CarpenterVisualizer"
+            BuildableName = "CarpenterVisualizer"
+            BlueprintName = "CarpenterVisualizer"
+            ReferencedContainer = "container:">
+         </BuildableReference>
+      </BuildableProductRunnable>
       <CommandLineArguments>
          <CommandLineArgument
-            argument = ""
+            argument = "~/Downloads"
+            isEnabled = "YES">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "~/Downloads/BuildGraph.json"
+            isEnabled = "YES">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "~/Downloads/LateInitGraph.json"
             isEnabled = "YES">
          </CommandLineArgument>
       </CommandLineArguments>
@@ -63,15 +96,16 @@
       savedToolIdentifier = ""
       useCustomWorkingDirectory = "NO"
       debugDocumentVersioning = "YES">
-      <MacroExpansion>
+      <BuildableProductRunnable
+         runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "CarpenterVisualize"
-            BuildableName = "CarpenterVisualize"
-            BlueprintName = "CarpenterVisualize"
+            BlueprintIdentifier = "CarpenterVisualizer"
+            BuildableName = "CarpenterVisualizer"
+            BlueprintName = "CarpenterVisualizer"
             ReferencedContainer = "container:">
          </BuildableReference>
-      </MacroExpansion>
+      </BuildableProductRunnable>
    </ProfileAction>
    <AnalyzeAction
       buildConfiguration = "Debug">

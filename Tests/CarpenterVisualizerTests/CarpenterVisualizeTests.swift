@@ -1,6 +1,28 @@
 import XCTest
+import SwiftGraph
 import CarpenterTestUtilities
-@testable import CarpenterVisualize
+@testable import CarpenterVisualizer
+
+class TransitiveReductionTests: XCTestCase {
+
+    final func testTransitiveReduction() async throws {
+        let buildGraphURL = Bundle.buildGraphURL
+        let lateInitGraphURL = Bundle.lateInitGraphURL
+
+        let buildGraphData = try Data(contentsOf: buildGraphURL)
+        let lateInitData = try Data(contentsOf: lateInitGraphURL)
+
+        let decoder = JSONDecoder()
+
+        let buildGraph = try decoder.decode(UnweightedGraph<String>.self, from: buildGraphData)
+        let lateInitGraph = try decoder.decode(UnweightedGraph<String>.self, from: lateInitData)
+
+        let reducedBuildGraph = try XCTUnwrap(buildGraph.transitiveReduction())
+
+        XCTAssertEqual(buildGraph.vertices, reducedBuildGraph.vertices)
+        XCTAssertNotEqual(buildGraph.edgeList(), reducedBuildGraph.edgeList())
+    }
+}
 
 class DotCarpenterVisualizeTests: XCTestCase {
 
@@ -25,19 +47,19 @@ class DotCarpenterVisualizeTests: XCTestCase {
 
         try await save(
             name: "Build dependencies.jpg",
-            Carpenter.shared.visualize(
+            CarpenterVisualizer.visualize(
                 mode: .builderDependency,
                 layoutAlgorithm: layoutAlgorithm))
 
         try await save(
             name: "Late initialization.jpg",
-            Carpenter.shared.visualize(
+            CarpenterVisualizer.visualize(
                 mode: .lateInitialization,
                 layoutAlgorithm: layoutAlgorithm))
 
         try await save(
             name: "Everything.jpg",
-            Carpenter.shared.visualize(
+            CarpenterVisualizer.visualize(
                 mode: .both,
                 layoutAlgorithm: layoutAlgorithm))
     }
@@ -59,40 +81,40 @@ class DotCarpenterVisualizeTests: XCTestCase {
 
         try await save(
             name: "Build dependencies.jpg",
-            Carpenter.shared.visualize(
+            CarpenterVisualizer.visualize(
                 mode: .builderDependency,
                 layoutAlgorithm: layoutAlgorithm,
                 removingTransitiveEdges: false))
 
         try await save(
             name: "Build dependencies simplified.jpg",
-            Carpenter.shared.visualize(
+            CarpenterVisualizer.visualize(
                 mode: .builderDependency,
                 layoutAlgorithm: layoutAlgorithm,
                 removingTransitiveEdges: true))
 
         try await save(
             name: "Late initialization.jpg",
-            Carpenter.shared.visualize(
+            CarpenterVisualizer.visualize(
                 mode: .lateInitialization,
                 layoutAlgorithm: layoutAlgorithm))
 
         try await save(
             name: "Late initialization simplified.jpg",
-            Carpenter.shared.visualize(
+            CarpenterVisualizer.visualize(
                 mode: .lateInitialization,
                 layoutAlgorithm: layoutAlgorithm,
                 removingTransitiveEdges: true))
 
         try await save(
             name: "Everything.jpg",
-            Carpenter.shared.visualize(
+            CarpenterVisualizer.visualize(
                 mode: .both,
                 layoutAlgorithm: layoutAlgorithm))
 
         try await save(
             name: "Everything simplified.jpg",
-            Carpenter.shared.visualize(
+            CarpenterVisualizer.visualize(
                 mode: .both,
                 layoutAlgorithm: layoutAlgorithm,
                 removingTransitiveEdges: true))

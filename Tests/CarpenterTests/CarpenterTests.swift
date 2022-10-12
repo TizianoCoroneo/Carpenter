@@ -250,6 +250,45 @@ final class CarpenterTests: XCTestCase {
         print(carpenter.dependencyGraph.description)
     }
 
+    func test_AddingDependeciesWithFactoryBuilderWithArray() throws {
+        var carpenter = try Carpenter {
+            [
+                Dependency.threeDependenciesObject.eraseToAnyFactory(),
+                Dependency.apiClient.eraseToAnyFactory(),
+                Dependency.urlSession.eraseToAnyFactory()
+            ].flatMap { $0 }
+            [
+                Dependency.authClient.eraseToAnyFactory(),
+                Dependency.keychain.eraseToAnyFactory(),
+                Dependency.i.eraseToAnyFactory()
+            ].flatMap { $0 }
+        }
+
+        try carpenter.finalizeGraph()
+
+        XCTAssertVertexExists(carpenter, name: "Int")
+        XCTAssertVertexExists(carpenter, name: "ApiClient")
+        XCTAssertVertexExists(carpenter, name: "Session")
+        XCTAssertVertexExists(carpenter, name: "AuthClient")
+        XCTAssertVertexExists(carpenter, name: "Keychain")
+        XCTAssertVertexExists(carpenter, name: "ThreeDependenciesObject")
+
+        XCTAssertEdgeExists(carpenter, from: "Int", to: "ApiClient")
+        XCTAssertEdgeExists(carpenter, from: "Int", to: "AuthClient")
+        XCTAssertEdgeExists(carpenter, from: "Int", to: "Keychain")
+        XCTAssertEdgeExists(carpenter, from: "Int", to: "ThreeDependenciesObject")
+        XCTAssertEdgeExists(carpenter, from: "Session", to: "ApiClient")
+        XCTAssertEdgeExists(carpenter, from: "AuthClient", to: "ApiClient")
+        XCTAssertEdgeExists(carpenter, from: "Keychain", to: "AuthClient")
+        XCTAssertEdgeExists(carpenter, from: "ApiClient", to: "ThreeDependenciesObject")
+        XCTAssertEdgeExists(carpenter, from: "AuthClient", to: "ThreeDependenciesObject")
+
+        XCTAssertEqual(carpenter.dependencyGraph.vertexCount, 6)
+        XCTAssertEqual(carpenter.dependencyGraph.edgeCount, 9)
+
+        print(carpenter.dependencyGraph.description)
+    }
+
     func test_AddingDependeciesWithGenericTypes() throws {
         var carpenter = try Carpenter {
             Dependency.array

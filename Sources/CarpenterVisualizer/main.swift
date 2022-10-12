@@ -207,11 +207,11 @@ extension UnweightedGraph {
         newGraph.vertices = self.vertices
         newGraph.edges = self.edges
 
-        for edge in newGraph.edgeList() {
+        for edge in self.edgeList() {
             let uVertex = newGraph.vertexAtIndex(edge.u)
             let vVertex = newGraph.vertexAtIndex(edge.v)
 
-            let allPaths = newGraph.findAllDfs(
+            let allPaths = self.findAllDfs(
                 from: uVertex,
                 goalTest: { $0 == vVertex })
 

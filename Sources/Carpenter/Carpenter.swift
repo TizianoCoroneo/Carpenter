@@ -325,6 +325,7 @@ public struct Carpenter {
     }
 }
 
+/// "(A, B)" -> ["A", "B"]
 func splitTupleContent(_ tupleContent: String) -> [String] {
     guard tupleContent != String(describing: Void.self) else { return [] }
 

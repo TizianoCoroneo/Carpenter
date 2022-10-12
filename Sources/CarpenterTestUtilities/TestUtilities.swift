@@ -213,8 +213,7 @@ public class CycleC {
 // MARK: - Files
 
 public extension Bundle {
-    static let buildGraphURL = Bundle.module.url(forResource: "BuildGraph", withExtension: "json")!
-    static let lateInitGraphURL = Bundle.module.url(forResource: "LateInitGraph", withExtension: "json")!
+    static let visualizationBundleURL = Bundle.module.url(forResource: "VisualizationBundle", withExtension: "json")!
 }
 
 // MARK: - Assertions

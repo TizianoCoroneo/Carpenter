@@ -6,21 +6,29 @@ import CarpenterTestUtilities
 class TransitiveReductionTests: XCTestCase {
 
     final func testTransitiveReduction() async throws {
-        let buildGraphURL = Bundle.buildGraphURL
-        let lateInitGraphURL = Bundle.lateInitGraphURL
+        let bundleURL = Bundle.visualizationBundleURL
 
-        let buildGraphData = try Data(contentsOf: buildGraphURL)
-        let lateInitData = try Data(contentsOf: lateInitGraphURL)
+        let bundleData = try Data(contentsOf: bundleURL)
 
         let decoder = JSONDecoder()
 
-        let buildGraph = try decoder.decode(UnweightedGraph<String>.self, from: buildGraphData)
-        let lateInitGraph = try decoder.decode(UnweightedGraph<String>.self, from: lateInitData)
+        let visualizationBundle = try decoder.decode(Carpenter.VisualizationBundle.self, from: bundleData)
 
-        let reducedBuildGraph = try XCTUnwrap(buildGraph.transitiveReduction())
+        let originalGraph = visualizationBundle.buildGraph
 
-        XCTAssertEqual(buildGraph.vertices, reducedBuildGraph.vertices)
-        XCTAssertNotEqual(buildGraph.edgeList(), reducedBuildGraph.edgeList())
+        let reducedBuildGraph = try XCTUnwrap(originalGraph.transitiveReduction())
+
+        XCTAssertEqual(originalGraph.vertices, reducedBuildGraph.vertices)
+        XCTAssertNotEqual(originalGraph.edgeList(), reducedBuildGraph.edgeList())
+
+        let data = try await CarpenterVisualizer.visualize(
+            bundle: visualizationBundle,
+            removingTransitiveEdges: true)
+
+        let attachment = XCTAttachment(image: NSImage(data: data)!)
+        attachment.name = "Graph"
+        attachment.lifetime = .keepAlways
+        self.add(attachment)
     }
 }
 

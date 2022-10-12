@@ -105,7 +105,7 @@ public struct AnyFactory {
         key: DependencyKey<Product>,
         requirementName: String,
         lateRequirementName: String,
-        resultName: String,
+        resultName: String, // TODO: same as key.name, delete?
         kind: Kind,
         builder: @escaping (Any) throws -> Any,
         lateInit: @escaping (inout Any, Any) throws -> Void

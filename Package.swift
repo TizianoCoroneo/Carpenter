@@ -57,8 +57,7 @@ let package = Package(
                 "Carpenter",
             ],
             resources: [
-                .copy("BuildGraph.json"),
-                .copy("LateInitGraph.json"),
+                .copy("VisualizationBundle.json"),
             ]),
 
         // MARK: - Tests

@@ -87,7 +87,7 @@ struct CarpenterVisualizer {
             removingTransitiveEdges: removingTransitiveEdges)
 
         try buildImageData.write(to: outputURL
-            .appendingPathComponent("\(name)\(removingTransitiveEdges ? "- simplified" : "")")
+            .appendingPathComponent("\(name)\(removingTransitiveEdges ? " - simplified" : "")")
             .appendingPathExtension("jpg"))
     }
 
@@ -102,7 +102,7 @@ struct CarpenterVisualizer {
         mode: Visualization = .both,
         layoutAlgorithm: LayoutAlgorithm = .dot,
         format: Format = .jpg,
-        removingTransitiveEdges: Bool = false
+        removingTransitiveEdges: Bool
     ) async throws -> Data {
         try await visualize(
             bundle: carpenter.exportToVisualizationBundle(),
@@ -117,11 +117,14 @@ struct CarpenterVisualizer {
         mode: Visualization = .both,
         layoutAlgorithm: LayoutAlgorithm = .dot,
         format: Format = .jpg,
-        removingTransitiveEdges: Bool = false
+        removingTransitiveEdges: Bool
     ) async throws -> Data {
 
         var buildGraph = bundle.buildGraph
         var lateInitGraph = bundle.lateInitGraph
+
+        precondition(buildGraph.isDAG, "The build graph needs to be a direct acyclic graph in order to create a visualization")
+        precondition(lateInitGraph.isDAG, "The late initialization graph needs to be a direct acyclic graph in order to create a visualization")
 
         var graphViz = Graph(directed: true, strict: false)
         graphViz.rankDirection = .topToBottom
@@ -131,7 +134,7 @@ struct CarpenterVisualizer {
             var builderGraph = Subgraph()
 
             if removingTransitiveEdges {
-                buildGraph = buildGraph.transitiveReduction() ?? buildGraph
+                buildGraph = buildGraph.transitiveReduction()!
             }
 
             for vertex in buildGraph.vertices {
@@ -165,7 +168,7 @@ struct CarpenterVisualizer {
             var graph = Subgraph()
 
             if removingTransitiveEdges {
-                lateInitGraph = lateInitGraph.transitiveReduction() ?? lateInitGraph
+                lateInitGraph = lateInitGraph.transitiveReduction()!
             }
 
             for vertex in lateInitGraph.vertices {
@@ -186,9 +189,6 @@ struct CarpenterVisualizer {
         }
 
         return try await withCheckedThrowingContinuation { continuation in
-            // Workaround to access the `removeEdgesImpliedByTransitivity` option.
-//            let options: Renderer.Options = removingTransitiveEdges ? [Renderer.Options(rawValue: 1 << 0)] : []
-
             Renderer(layout: layoutAlgorithm, options: [])
                 .render(graph: graphViz, to: format, completion: continuation.resume(with:))
         }

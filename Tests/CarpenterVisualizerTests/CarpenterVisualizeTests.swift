@@ -19,7 +19,22 @@ class TransitiveReductionTests: XCTestCase {
         let reducedBuildGraph = try XCTUnwrap(originalGraph.transitiveReduction())
 
         XCTAssertEqual(originalGraph.vertices, reducedBuildGraph.vertices)
-        XCTAssertNotEqual(originalGraph.edgeList(), reducedBuildGraph.edgeList())
+
+        let originalEdgeList = originalGraph.edgeList()
+        let reducedEdgeList = reducedBuildGraph.edgeList()
+
+        let originalEdgeNames = originalEdgeList.map { edge in
+            "\(originalGraph.vertexAtIndex(edge.u)) -> \(originalGraph.vertexAtIndex(edge.v))"
+        }
+        let reducedEdgeNames = reducedEdgeList.map { edge in
+            "\(reducedBuildGraph.vertexAtIndex(edge.u)) -> \(reducedBuildGraph.vertexAtIndex(edge.v))"
+        }
+
+        let removedEdges = Set(originalEdgeNames).subtracting(Set(reducedEdgeNames))
+
+        print(removedEdges)
+
+        XCTAssertNotEqual(originalEdgeNames, reducedEdgeNames)
 
         let data = try await CarpenterVisualizer.visualize(
             bundle: visualizationBundle,
@@ -57,19 +72,22 @@ class DotCarpenterVisualizeTests: XCTestCase {
             name: "Build dependencies.jpg",
             CarpenterVisualizer.visualize(
                 mode: .builderDependency,
-                layoutAlgorithm: layoutAlgorithm))
+                layoutAlgorithm: layoutAlgorithm,
+                removingTransitiveEdges: false))
 
         try await save(
             name: "Late initialization.jpg",
             CarpenterVisualizer.visualize(
                 mode: .lateInitialization,
-                layoutAlgorithm: layoutAlgorithm))
+                layoutAlgorithm: layoutAlgorithm,
+                removingTransitiveEdges: false))
 
         try await save(
             name: "Everything.jpg",
             CarpenterVisualizer.visualize(
                 mode: .both,
-                layoutAlgorithm: layoutAlgorithm))
+                layoutAlgorithm: layoutAlgorithm,
+                removingTransitiveEdges: false))
     }
 
     func testVisualizeGraphWithLateInitialization() async throws {
@@ -105,7 +123,8 @@ class DotCarpenterVisualizeTests: XCTestCase {
             name: "Late initialization.jpg",
             CarpenterVisualizer.visualize(
                 mode: .lateInitialization,
-                layoutAlgorithm: layoutAlgorithm))
+                layoutAlgorithm: layoutAlgorithm,
+                removingTransitiveEdges: false))
 
         try await save(
             name: "Late initialization simplified.jpg",
@@ -118,7 +137,8 @@ class DotCarpenterVisualizeTests: XCTestCase {
             name: "Everything.jpg",
             CarpenterVisualizer.visualize(
                 mode: .both,
-                layoutAlgorithm: layoutAlgorithm))
+                layoutAlgorithm: layoutAlgorithm,
+                removingTransitiveEdges: false))
 
         try await save(
             name: "Everything simplified.jpg",

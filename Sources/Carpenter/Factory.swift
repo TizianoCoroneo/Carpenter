@@ -54,7 +54,6 @@ public struct Factory<Requirement, LateRequirement, Product>: FactoryConvertible
             key: DependencyKey<Product>(),
             requirementName: String(describing: Requirement.self),
             lateRequirementName: String(describing: LateRequirement.self),
-            resultName: String(describing: Product.self),
             kind: .objectFactory,
             builder: {
                 guard let requirement = $0 as? Requirement
@@ -105,15 +104,13 @@ public struct AnyFactory {
         key: DependencyKey<Product>,
         requirementName: String,
         lateRequirementName: String,
-        resultName: String, // TODO: same as key.name, delete?
         kind: Kind,
         builder: @escaping (Any) throws -> Any,
         lateInit: @escaping (inout Any, Any) throws -> Void
     ) {
         self.requirementName = requirementName
         self.lateRequirementName = lateRequirementName
-        self.resultName = resultName
-        self.keyName = key.name
+        self.productName = key.name
         self.kind = kind
         self.builder = builder
         self.lateInit = lateInit
@@ -121,10 +118,8 @@ public struct AnyFactory {
 
     let requirementName: String
     let lateRequirementName: String
-    let resultName: String
-    let keyName: String
+    let productName: String
     let kind: Kind
-
     let builder: (Any) throws -> Any
     let lateInit: (inout Any, Any) throws -> Void
 }

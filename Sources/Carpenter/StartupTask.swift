@@ -39,7 +39,6 @@ public struct StartupTask<Requirement, LateRequirement>: FactoryConvertible {
             key: key,
             requirementName: String(describing: Requirement.self),
             lateRequirementName: String(describing: LateRequirement.self),
-            resultName: key.name,
             kind: .startupTask,
             builder: {
                 guard let requirement = $0 as? Requirement

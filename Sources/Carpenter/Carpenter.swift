@@ -96,19 +96,19 @@ public struct Carpenter {
     mutating func add(
         _ factory: AnyFactory
     ) throws {
-        guard !requirementsByResultName.keys.contains(factory.keyName)
-        else { throw E.factoryAlreadyAdded(name: factory.keyName) }
+        guard !requirementsByResultName.keys.contains(factory.productName)
+        else { throw E.factoryAlreadyAdded(name: factory.productName) }
 
-        guard !lateRequirementsByResultName.keys.contains(factory.keyName)
-        else { throw E.factoryAlreadyAdded(name: factory.keyName) }
+        guard !lateRequirementsByResultName.keys.contains(factory.productName)
+        else { throw E.factoryAlreadyAdded(name: factory.productName) }
 
-        requirementsByResultName[factory.keyName] = splitTupleContent(factory.requirementName)
-        lateRequirementsByResultName[factory.keyName] = splitTupleContent(factory.lateRequirementName)
+        requirementsByResultName[factory.productName] = splitTupleContent(factory.requirementName)
+        lateRequirementsByResultName[factory.productName] = splitTupleContent(factory.lateRequirementName)
 
-        _ = dependencyGraph.addVertex(factory.keyName)
-        _ = lateInitDependencyGraph.addVertex(factory.keyName)
+        _ = dependencyGraph.addVertex(factory.productName)
+        _ = lateInitDependencyGraph.addVertex(factory.productName)
 
-        factoryRegistry[factory.keyName] = factory
+        factoryRegistry[factory.productName] = factory
     }
 
     private func build(

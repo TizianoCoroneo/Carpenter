@@ -1,20 +1,17 @@
 
 import Foundation
 
-public struct ProtocolWrapper<R, L, ConcreteType, ProtocolType>: FactoryConvertible {
+public struct ProtocolWrapper<ConcreteType, ProtocolType>: FactoryConvertible {
     let concreteKey: DependencyKey<ConcreteType>
     let protocolKey: DependencyKey<ProtocolType>
 
-    let factory: () -> Factory<R, L, ConcreteType>
     let cast: (ConcreteType) -> ProtocolType
 
-    init(
-        _ factory: @escaping @autoclosure () -> Factory<R, L, ConcreteType>,
+    public init(
         cast: @escaping (ConcreteType) -> ProtocolType
     ) {
         self.concreteKey = DependencyKey<ConcreteType>()
         self.protocolKey = DependencyKey<ProtocolType>()
-        self.factory = factory
         self.cast = cast
     }
 
@@ -37,7 +34,5 @@ public struct ProtocolWrapper<R, L, ConcreteType, ProtocolType>: FactoryConverti
                 return self.cast(concrete)
             },
             lateInit: { _, _ in })
-
-        factory()
     }
 }

@@ -49,12 +49,6 @@ public struct Factory<Requirement, LateRequirement, Product>: FactoryConvertible
             lateInit: { (_, _: Void) in })
     }
 
-    public func wrapInProtocol<ProtocolType>(
-        cast: @escaping (Product) -> ProtocolType
-    ) -> ProtocolWrapper<Requirement, LateRequirement, Product, ProtocolType> {
-        ProtocolWrapper(self, cast: cast)
-    }
-
     public func eraseToAnyFactory() -> [AnyFactory] {
         AnyFactory(
             key: DependencyKey<Product>(),

@@ -8,7 +8,7 @@ public struct ProtocolWrapper<R, L, ConcreteType, ProtocolType>: FactoryConverti
     let factory: () -> Factory<R, L, ConcreteType>
     let cast: (ConcreteType) -> ProtocolType
 
-    public init(
+    init(
         _ factory: @escaping @autoclosure () -> Factory<R, L, ConcreteType>,
         cast: @escaping (ConcreteType) -> ProtocolType
     ) {

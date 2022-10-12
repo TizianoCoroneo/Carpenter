@@ -144,7 +144,9 @@ struct CarpenterVisualizer {
                 default: break
                 }
 
-                graphViz.append(node)
+                if vertex != String(describing: Void.self) {
+                    graphViz.append(node)
+                }
 
                 for neighbor in buildGraph.neighborsForVertex(vertex) ?? [] {
                     var e = Edge(

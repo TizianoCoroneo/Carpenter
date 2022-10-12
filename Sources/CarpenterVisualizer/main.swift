@@ -193,10 +193,89 @@ struct CarpenterVisualizer {
                 .render(graph: graphViz, to: format, completion: continuation.resume(with:))
         }
     }
+
+    static func visualize(
+        graph: UnweightedGraph<String>,
+        mode: Visualization = .both,
+        layoutAlgorithm: LayoutAlgorithm = .dot,
+        format: Format = .jpg,
+        removingTransitiveEdges: Bool
+    ) async throws -> Data {
+
+        precondition(graph.isDAG, "The graph needs to be a direct acyclic graph in order to create a visualization")
+
+        var graph = graph
+
+        var graphViz = Graph(directed: true, strict: false)
+        graphViz.rankDirection = .topToBottom
+        graphViz.outputOrder = .nodesFirst
+
+        if mode == .builderDependency || mode == .both {
+            var builderGraph = Subgraph()
+
+            if removingTransitiveEdges {
+                graph = graph.transitiveReduction()!
+            }
+
+            for vertex in graph.vertices {
+                let node = Node(vertex)
+
+                if vertex != String(describing: Void.self) {
+                    graphViz.append(node)
+                }
+
+                for neighbor in graph.neighborsForVertex(vertex) ?? [] {
+                    var e = Edge(
+                        from: neighbor,
+                        to: vertex,
+                        direction: .forward)
+                    e.strokeColor = .rgb(red: 255, green: 0, blue: 0)
+                    builderGraph.append(e)
+                }
+            }
+
+            graphViz.append(builderGraph)
+        }
+
+        return try await withCheckedThrowingContinuation { continuation in
+            Renderer(layout: layoutAlgorithm, options: [])
+                .render(graph: graphViz, to: format, completion: continuation.resume(with:))
+        }
+    }
 }
 
 
 extension UnweightedGraph {
+
+    func findAllPaths(fromIndex from: Int, toIndex to: Int) -> [[UnweightedEdge]] {
+        var paths: [[UnweightedEdge]] = []
+        var path: [UnweightedEdge] = []
+
+        func findAllPathsRecursive(from: Int, to: Int) {
+            let nextNodes = self.neighborsForIndex(from).compactMap(self.indexOfVertex(_:))
+            for next in nextNodes {
+                if next == to {
+                    var newPath = [UnweightedEdge]()
+                    for n in path {
+                        newPath.append(n)
+                    }
+                    newPath.append(UnweightedEdge(u: from, v: next, directed: true))
+                    paths.append(newPath)
+                } else if !path.contains(where: { $0.v == next }) {
+                    path.append(UnweightedEdge(
+                        u: from,
+                        v: next,
+                        directed: true))
+                    findAllPathsRecursive(from: next, to: to)
+                    path.removeLast()
+                }
+            }
+        }
+
+        findAllPathsRecursive(from: from, to: to)
+
+        return paths
+    }
 
     /// Returns a new graph without all the transitive edges of the original graph.
     func transitiveReduction() -> UnweightedGraph<V>? where V: Hashable {
@@ -208,12 +287,7 @@ extension UnweightedGraph {
         newGraph.edges = self.edges
 
         for edge in self.edgeList() {
-            let uVertex = newGraph.vertexAtIndex(edge.u)
-            let vVertex = newGraph.vertexAtIndex(edge.v)
-
-            let allPaths = self.findAllDfs(
-                from: uVertex,
-                goalTest: { $0 == vVertex })
+            let allPaths = self.findAllPaths(fromIndex: edge.u, toIndex: edge.v)
 
             if allPaths.contains(where: { path in !path.contains(edge) }) {
                 newGraph.removeEdge(edge)

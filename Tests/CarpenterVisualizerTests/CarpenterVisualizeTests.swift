@@ -1,18 +1,21 @@
 import XCTest
 import SwiftGraph
 import CarpenterTestUtilities
+@testable import Carpenter
 @testable import CarpenterVisualizer
 
 class TransitiveReductionTests: XCTestCase {
 
-    final func testTransitiveReduction() async throws {
+    func visualizationBundle() throws -> Carpenter.VisualizationBundle {
         let bundleURL = Bundle.visualizationBundleURL
-
         let bundleData = try Data(contentsOf: bundleURL)
-
         let decoder = JSONDecoder()
-
         let visualizationBundle = try decoder.decode(Carpenter.VisualizationBundle.self, from: bundleData)
+        return visualizationBundle
+    }
+
+    final func testTransitiveReduction() async throws {
+        let visualizationBundle = try visualizationBundle()
 
         let originalGraph = visualizationBundle.buildGraph
 
@@ -45,6 +48,62 @@ class TransitiveReductionTests: XCTestCase {
         attachment.lifetime = .keepAlways
         self.add(attachment)
     }
+
+    final func testFindAllPaths() async throws {
+        let visualizationBundle = try visualizationBundle()
+
+        var graph = visualizationBundle.buildGraph
+
+        let impactedNodes: Set<String> = [
+            "UIWindow",
+            "TicketSwapUserContext",
+            "AppTabWireframe",
+            "MainTabWireframe",
+        ]
+
+        graph.vertices
+            .filter { !impactedNodes.contains($0) }
+            .forEach { graph.removeVertex($0) }
+
+        XCTAssertTrue(graph.edgeExists(from: "TicketSwapUserContext", to: "UIWindow"))
+        XCTAssertTrue(graph.edgeExists(from: "TicketSwapUserContext", to: "AppTabWireframe"))
+        XCTAssertTrue(graph.edgeExists(from: "AppTabWireframe", to: "MainTabWireframe"))
+        XCTAssertTrue(graph.edgeExists(from: "MainTabWireframe", to: "UIWindow"))
+
+        let paths = graph.findAllPaths(
+            fromIndex: graph.indexOfVertex("TicketSwapUserContext")!,
+            toIndex: graph.indexOfVertex("UIWindow")!)
+
+        let printablePaths = paths.map { path in
+            path.map { edge in
+                "\(graph.vertexAtIndex(edge.u)) -> \(graph.vertexAtIndex(edge.v))"
+            }
+        }
+
+        print(printablePaths)
+
+        XCTAssertEqual(paths.count, 2)
+
+        guard paths.count == 2 else { return }
+
+        XCTAssertEqual(printablePaths[0], [
+            "TicketSwapUserContext -> AppTabWireframe",
+            "AppTabWireframe -> MainTabWireframe",
+            "MainTabWireframe -> UIWindow"
+        ])
+        XCTAssertEqual(printablePaths[1], [
+            "TicketSwapUserContext -> UIWindow"
+        ])
+
+        let data = try await CarpenterVisualizer.visualize(
+            graph: graph,
+            removingTransitiveEdges: false)
+
+        let attachment = XCTAttachment(image: NSImage(data: data)!)
+        attachment.name = "Graph"
+        attachment.lifetime = .keepAlways
+        self.add(attachment)
+    }
 }
 
 class DotCarpenterVisualizeTests: XCTestCase {
@@ -67,6 +126,8 @@ class DotCarpenterVisualizeTests: XCTestCase {
             Dependency.urlSession
             Dependency.apiClient
         }
+
+        try Carpenter.shared.finalizeGraph()
 
         try await save(
             name: "Build dependencies.jpg",
@@ -104,6 +165,8 @@ class DotCarpenterVisualizeTests: XCTestCase {
             Dependency.fiveDependenciesObject
             Dependency.sixDependenciesObject
         } 
+
+        try Carpenter.shared.finalizeGraph()
 
         try await save(
             name: "Build dependencies.jpg",

@@ -34,7 +34,7 @@ public struct StartupTask<Requirement, LateRequirement>: FactoryConvertible {
             lateInit: { (_: Void) in })
     }
 
-    public func eraseToAnyFactory() -> AnyFactory {
+    public func eraseToAnyFactory() -> [AnyFactory] {
         AnyFactory(
             key: key,
             requirementName: String(describing: Requirement.self),

@@ -4,12 +4,12 @@ public struct FactoryBuilder {
 
     public static func buildExpression(
         _ value: some FactoryConvertible
-    ) -> AnyFactory {
+    ) -> [AnyFactory] {
         value.eraseToAnyFactory()
     }
 
-    public static func buildBlock(_ components: AnyFactory...) -> [AnyFactory] {
-        components
+    public static func buildBlock(_ components: [AnyFactory]...) -> [AnyFactory] {
+        components.flatMap { $0 }
     }
 
     public static func buildArray(_ components: [[AnyFactory]]) -> [AnyFactory] {

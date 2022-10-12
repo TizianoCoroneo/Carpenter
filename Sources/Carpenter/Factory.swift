@@ -49,7 +49,7 @@ public struct Factory<Requirement, LateRequirement, Product>: FactoryConvertible
             lateInit: { (_, _: Void) in })
     }
 
-    public func eraseToAnyFactory() -> AnyFactory {
+    public func eraseToAnyFactory() -> [AnyFactory] {
         AnyFactory(
             key: DependencyKey<Product>(),
             requirementName: String(describing: Requirement.self),
@@ -90,7 +90,8 @@ public struct Factory<Requirement, LateRequirement, Product>: FactoryConvertible
 }
 
 public protocol FactoryConvertible {
-    func eraseToAnyFactory() -> AnyFactory
+    @FactoryBuilder
+    func eraseToAnyFactory() -> [AnyFactory]
 }
 
 public struct AnyFactory: FactoryConvertible {
@@ -127,7 +128,7 @@ public struct AnyFactory: FactoryConvertible {
     let builder: (Any) throws -> Any
     let lateInit: (inout Any, Any) throws -> Void
 
-    public func eraseToAnyFactory() -> AnyFactory {
+    public func eraseToAnyFactory() -> [AnyFactory] {
         self
     }
 }

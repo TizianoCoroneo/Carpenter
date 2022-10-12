@@ -5,11 +5,11 @@ public struct ProtocolWrapper<R, L, ConcreteType, ProtocolType>: FactoryConverti
     let concreteKey: DependencyKey<ConcreteType>
     let protocolKey: DependencyKey<ProtocolType>
 
-    let factory: Factory<R, L, ConcreteType>
+    let factory: () -> Factory<R, L, ConcreteType>
     let cast: (ConcreteType) -> ProtocolType
 
     public init(
-        _ factory: Factory<R, L, ConcreteType>,
+        _ factory: @escaping @autoclosure () -> Factory<R, L, ConcreteType>,
         cast: @escaping (ConcreteType) -> ProtocolType
     ) {
         self.concreteKey = DependencyKey<ConcreteType>()
@@ -38,6 +38,6 @@ public struct ProtocolWrapper<R, L, ConcreteType, ProtocolType>: FactoryConverti
             },
             lateInit: { _, _ in })
 
-        factory
+        factory()
     }
 }

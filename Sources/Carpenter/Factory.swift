@@ -55,6 +55,7 @@ public struct Factory<Requirement, LateRequirement, Product>: FactoryConvertible
             requirementName: String(describing: Requirement.self),
             lateRequirementName: String(describing: LateRequirement.self),
             resultName: String(describing: Product.self),
+            kind: .objectFactory,
             builder: {
                 guard let requirement = $0 as? Requirement
                 else {
@@ -93,11 +94,18 @@ public protocol FactoryConvertible {
 }
 
 public struct AnyFactory: FactoryConvertible {
+    public enum Kind: Codable {
+        case objectFactory
+        case startupTask
+        case protocolFactory
+    }
+
     public init<Product>(
         key: DependencyKey<Product>,
         requirementName: String,
         lateRequirementName: String,
         resultName: String,
+        kind: Kind,
         builder: @escaping (Any) throws -> Any,
         lateInit: @escaping (inout Any, Any) throws -> Void
     ) {
@@ -105,6 +113,7 @@ public struct AnyFactory: FactoryConvertible {
         self.lateRequirementName = lateRequirementName
         self.resultName = resultName
         self.keyName = key.name
+        self.kind = kind
         self.builder = builder
         self.lateInit = lateInit
     }
@@ -113,6 +122,7 @@ public struct AnyFactory: FactoryConvertible {
     let lateRequirementName: String
     let resultName: String
     let keyName: String
+    let kind: Kind
 
     let builder: (Any) throws -> Any
     let lateInit: (inout Any, Any) throws -> Void

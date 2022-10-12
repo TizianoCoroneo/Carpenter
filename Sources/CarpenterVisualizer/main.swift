@@ -12,14 +12,13 @@ struct CarpenterVisualizer {
 
         let arguments = ProcessInfo.processInfo.arguments
 
-        guard arguments.count == 4 else {
+        guard arguments.count == 3 else {
             print("""
             Wrong number of arguments.
 
             You must provide as arguments two paths:
             - a path to a folder where to output the images,
-            - a path to a JSON file that contains the build dependency graph,
-            - a path to a JSON file that contains the late initialization graph.
+            - a path to a JSON file that contains the encoded VisualizationBundle.
             """)
             return
         }
@@ -28,59 +27,48 @@ struct CarpenterVisualizer {
 
         let jsonDecoder = JSONDecoder()
 
-        let buildURL = URL(fileURLWithPath: arguments[2])
-        print(buildURL)
-        let buildData = try Data(contentsOf: buildURL)
-        let buildGraph = try jsonDecoder.decode(UnweightedGraph<String>.self, from: buildData)
-
-        let lateInitURL = URL(fileURLWithPath: arguments[3])
-        let lateInitData = try Data(contentsOf: lateInitURL)
-        let lateInitGraph = try jsonDecoder.decode(UnweightedGraph<String>.self, from: lateInitData)
+        let bundleURL = URL(fileURLWithPath: arguments[2])
+        let bundleData = try Data(contentsOf: bundleURL)
+        let bundle = try jsonDecoder.decode(Carpenter.VisualizationBundle.self, from: bundleData)
 
         try await saveImage(
             name: "BuildGraph",
-            buildGraph: buildGraph,
-            lateInitGraph: lateInitGraph,
+            bundle: bundle,
             mode: .builderDependency,
             removingTransitiveEdges: false,
             outputURL: outputURL)
 
         try await saveImage(
             name: "BuildGraph",
-            buildGraph: buildGraph,
-            lateInitGraph: lateInitGraph,
+            bundle: bundle,
             mode: .builderDependency,
             removingTransitiveEdges: true,
             outputURL: outputURL)
 
         try await saveImage(
             name: "LateInitGraph",
-            buildGraph: buildGraph,
-            lateInitGraph: lateInitGraph,
+            bundle: bundle,
             mode: .lateInitialization,
             removingTransitiveEdges: false,
             outputURL: outputURL)
 
         try await saveImage(
             name: "LateInitGraph",
-            buildGraph: buildGraph,
-            lateInitGraph: lateInitGraph,
+            bundle: bundle,
             mode: .lateInitialization,
             removingTransitiveEdges: true,
             outputURL: outputURL)
 
         try await saveImage(
             name: "FullGraph",
-            buildGraph: buildGraph,
-            lateInitGraph: lateInitGraph,
+            bundle: bundle,
             mode: .both,
             removingTransitiveEdges: false,
             outputURL: outputURL)
 
         try await saveImage(
             name: "FullGraph",
-            buildGraph: buildGraph,
-            lateInitGraph: lateInitGraph,
+            bundle: bundle,
             mode: .both,
             removingTransitiveEdges: true,
             outputURL: outputURL)
@@ -88,15 +76,13 @@ struct CarpenterVisualizer {
 
     public static func saveImage(
         name: String,
-        buildGraph: UnweightedGraph<String>,
-        lateInitGraph: UnweightedGraph<String>,
+        bundle: Carpenter.VisualizationBundle,
         mode: Visualization,
         removingTransitiveEdges: Bool,
         outputURL: URL
     ) async throws {
         let buildImageData = try await visualize(
-            buildGraph: buildGraph,
-            lateInitGraph: lateInitGraph,
+            bundle: bundle,
             mode: mode,
             removingTransitiveEdges: removingTransitiveEdges)
 
@@ -119,8 +105,7 @@ struct CarpenterVisualizer {
         removingTransitiveEdges: Bool = false
     ) async throws -> Data {
         try await visualize(
-            buildGraph: carpenter.dependencyGraph,
-            lateInitGraph: carpenter.lateInitDependencyGraph,
+            bundle: carpenter.exportToVisualizationBundle(),
             mode: mode,
             layoutAlgorithm: layoutAlgorithm,
             format: format,
@@ -128,16 +113,15 @@ struct CarpenterVisualizer {
     }
 
     public static func visualize(
-        buildGraph: UnweightedGraph<String>,
-        lateInitGraph: UnweightedGraph<String>,
+        bundle: Carpenter.VisualizationBundle,
         mode: Visualization = .both,
         layoutAlgorithm: LayoutAlgorithm = .dot,
         format: Format = .jpg,
         removingTransitiveEdges: Bool = false
     ) async throws -> Data {
 
-        var buildGraph = buildGraph
-        var lateInitGraph = lateInitGraph
+        var buildGraph = bundle.buildGraph
+        var lateInitGraph = bundle.lateInitGraph
 
         var graphViz = Graph(directed: true, strict: false)
         graphViz.rankDirection = .topToBottom
@@ -151,6 +135,17 @@ struct CarpenterVisualizer {
             }
 
             for vertex in buildGraph.vertices {
+                var node = Node(vertex)
+
+                switch bundle.nodeKinds[vertex] {
+                case .objectFactory: node.shape = .ellipse
+                case .startupTask: node.shape = .rectangle
+                case .protocolFactory: node.shape = .diamond
+                default: break
+                }
+
+                graphViz.append(node)
+
                 for neighbor in buildGraph.neighborsForVertex(vertex) ?? [] {
                     var e = Edge(
                         from: neighbor,

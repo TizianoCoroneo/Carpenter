@@ -8,6 +8,12 @@ public struct FactoryBuilder {
         value.eraseToAnyFactory()
     }
 
+    public static func buildExpression(
+        _ value: AnyFactory
+    ) -> [AnyFactory] {
+        [value]
+    }
+
     public static func buildBlock(_ components: [AnyFactory]...) -> [AnyFactory] {
         components.flatMap { $0 }
     }

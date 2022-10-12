@@ -94,7 +94,7 @@ public protocol FactoryConvertible {
     func eraseToAnyFactory() -> [AnyFactory]
 }
 
-public struct AnyFactory: FactoryConvertible {
+public struct AnyFactory {
     public enum Kind: Codable {
         case objectFactory
         case startupTask
@@ -127,8 +127,4 @@ public struct AnyFactory: FactoryConvertible {
 
     let builder: (Any) throws -> Any
     let lateInit: (inout Any, Any) throws -> Void
-
-    public func eraseToAnyFactory() -> [AnyFactory] {
-        self
-    }
 }

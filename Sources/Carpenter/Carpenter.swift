@@ -188,6 +188,86 @@ public struct Carpenter {
             else { throw E.builtProductNotFoundForVertex(name: requirements[5]) }
             result = try factory((dependency1, dependency2, dependency3, dependency4, dependency5, dependency6))
 
+        case 7:
+            guard let dependency1 = builtProductsRegistry[requirements[0]]
+            else { throw E.builtProductNotFoundForVertex(name: requirements[0]) }
+            guard let dependency2 = builtProductsRegistry[requirements[1]]
+            else { throw E.builtProductNotFoundForVertex(name: requirements[1]) }
+            guard let dependency3 = builtProductsRegistry[requirements[2]]
+            else { throw E.builtProductNotFoundForVertex(name: requirements[2]) }
+            guard let dependency4 = builtProductsRegistry[requirements[3]]
+            else { throw E.builtProductNotFoundForVertex(name: requirements[3]) }
+            guard let dependency5 = builtProductsRegistry[requirements[4]]
+            else { throw E.builtProductNotFoundForVertex(name: requirements[4]) }
+            guard let dependency6 = builtProductsRegistry[requirements[5]]
+            else { throw E.builtProductNotFoundForVertex(name: requirements[5]) }
+            guard let dependency7 = builtProductsRegistry[requirements[6]]
+            else { throw E.builtProductNotFoundForVertex(name: requirements[6]) }
+            result = try factory((dependency1, dependency2, dependency3, dependency4, dependency5, dependency6, dependency7))
+
+        case 8:
+            guard let dependency1 = builtProductsRegistry[requirements[0]]
+            else { throw E.builtProductNotFoundForVertex(name: requirements[0]) }
+            guard let dependency2 = builtProductsRegistry[requirements[1]]
+            else { throw E.builtProductNotFoundForVertex(name: requirements[1]) }
+            guard let dependency3 = builtProductsRegistry[requirements[2]]
+            else { throw E.builtProductNotFoundForVertex(name: requirements[2]) }
+            guard let dependency4 = builtProductsRegistry[requirements[3]]
+            else { throw E.builtProductNotFoundForVertex(name: requirements[3]) }
+            guard let dependency5 = builtProductsRegistry[requirements[4]]
+            else { throw E.builtProductNotFoundForVertex(name: requirements[4]) }
+            guard let dependency6 = builtProductsRegistry[requirements[5]]
+            else { throw E.builtProductNotFoundForVertex(name: requirements[5]) }
+            guard let dependency7 = builtProductsRegistry[requirements[6]]
+            else { throw E.builtProductNotFoundForVertex(name: requirements[6]) }
+            guard let dependency8 = builtProductsRegistry[requirements[7]]
+            else { throw E.builtProductNotFoundForVertex(name: requirements[7]) }
+            result = try factory((dependency1, dependency2, dependency3, dependency4, dependency5, dependency6, dependency7, dependency8))
+
+        case 9:
+            guard let dependency1 = builtProductsRegistry[requirements[0]]
+            else { throw E.builtProductNotFoundForVertex(name: requirements[0]) }
+            guard let dependency2 = builtProductsRegistry[requirements[1]]
+            else { throw E.builtProductNotFoundForVertex(name: requirements[1]) }
+            guard let dependency3 = builtProductsRegistry[requirements[2]]
+            else { throw E.builtProductNotFoundForVertex(name: requirements[2]) }
+            guard let dependency4 = builtProductsRegistry[requirements[3]]
+            else { throw E.builtProductNotFoundForVertex(name: requirements[3]) }
+            guard let dependency5 = builtProductsRegistry[requirements[4]]
+            else { throw E.builtProductNotFoundForVertex(name: requirements[4]) }
+            guard let dependency6 = builtProductsRegistry[requirements[5]]
+            else { throw E.builtProductNotFoundForVertex(name: requirements[5]) }
+            guard let dependency7 = builtProductsRegistry[requirements[6]]
+            else { throw E.builtProductNotFoundForVertex(name: requirements[6]) }
+            guard let dependency8 = builtProductsRegistry[requirements[7]]
+            else { throw E.builtProductNotFoundForVertex(name: requirements[7]) }
+            guard let dependency9 = builtProductsRegistry[requirements[8]]
+            else { throw E.builtProductNotFoundForVertex(name: requirements[8]) }
+            result = try factory((dependency1, dependency2, dependency3, dependency4, dependency5, dependency6, dependency7, dependency8, dependency9))
+
+        case 10:
+            guard let dependency1 = builtProductsRegistry[requirements[0]]
+            else { throw E.builtProductNotFoundForVertex(name: requirements[0]) }
+            guard let dependency2 = builtProductsRegistry[requirements[1]]
+            else { throw E.builtProductNotFoundForVertex(name: requirements[1]) }
+            guard let dependency3 = builtProductsRegistry[requirements[2]]
+            else { throw E.builtProductNotFoundForVertex(name: requirements[2]) }
+            guard let dependency4 = builtProductsRegistry[requirements[3]]
+            else { throw E.builtProductNotFoundForVertex(name: requirements[3]) }
+            guard let dependency5 = builtProductsRegistry[requirements[4]]
+            else { throw E.builtProductNotFoundForVertex(name: requirements[4]) }
+            guard let dependency6 = builtProductsRegistry[requirements[5]]
+            else { throw E.builtProductNotFoundForVertex(name: requirements[5]) }
+            guard let dependency7 = builtProductsRegistry[requirements[6]]
+            else { throw E.builtProductNotFoundForVertex(name: requirements[6]) }
+            guard let dependency8 = builtProductsRegistry[requirements[7]]
+            else { throw E.builtProductNotFoundForVertex(name: requirements[7]) }
+            guard let dependency9 = builtProductsRegistry[requirements[8]]
+            else { throw E.builtProductNotFoundForVertex(name: requirements[8]) }
+            guard let dependency10 = builtProductsRegistry[requirements[9]]
+            else { throw E.builtProductNotFoundForVertex(name: requirements[9]) }
+            result = try factory((dependency1, dependency2, dependency3, dependency4, dependency5, dependency6, dependency7, dependency8, dependency9, dependency10))
+
         default:
             throw E.factoryBuilderHasTooManyArguments(name: vertex, count: requirements.count)
         }
@@ -279,6 +359,86 @@ public struct Carpenter {
             guard let dependency6 = builtProductsRegistry[requirements[5]]
             else { throw E.builtProductNotFoundForVertex(name: requirements[5]) }
             try setup(&product, (dependency1, dependency2, dependency3, dependency4, dependency5, dependency6))
+
+        case 7:
+            guard let dependency1 = builtProductsRegistry[requirements[0]]
+            else { throw E.builtProductNotFoundForVertex(name: requirements[0]) }
+            guard let dependency2 = builtProductsRegistry[requirements[1]]
+            else { throw E.builtProductNotFoundForVertex(name: requirements[1]) }
+            guard let dependency3 = builtProductsRegistry[requirements[2]]
+            else { throw E.builtProductNotFoundForVertex(name: requirements[2]) }
+            guard let dependency4 = builtProductsRegistry[requirements[3]]
+            else { throw E.builtProductNotFoundForVertex(name: requirements[3]) }
+            guard let dependency5 = builtProductsRegistry[requirements[4]]
+            else { throw E.builtProductNotFoundForVertex(name: requirements[4]) }
+            guard let dependency6 = builtProductsRegistry[requirements[5]]
+            else { throw E.builtProductNotFoundForVertex(name: requirements[5]) }
+            guard let dependency7 = builtProductsRegistry[requirements[6]]
+            else { throw E.builtProductNotFoundForVertex(name: requirements[6]) }
+            try setup(&product, (dependency1, dependency2, dependency3, dependency4, dependency5, dependency6, dependency7))
+
+        case 8:
+            guard let dependency1 = builtProductsRegistry[requirements[0]]
+            else { throw E.builtProductNotFoundForVertex(name: requirements[0]) }
+            guard let dependency2 = builtProductsRegistry[requirements[1]]
+            else { throw E.builtProductNotFoundForVertex(name: requirements[1]) }
+            guard let dependency3 = builtProductsRegistry[requirements[2]]
+            else { throw E.builtProductNotFoundForVertex(name: requirements[2]) }
+            guard let dependency4 = builtProductsRegistry[requirements[3]]
+            else { throw E.builtProductNotFoundForVertex(name: requirements[3]) }
+            guard let dependency5 = builtProductsRegistry[requirements[4]]
+            else { throw E.builtProductNotFoundForVertex(name: requirements[4]) }
+            guard let dependency6 = builtProductsRegistry[requirements[5]]
+            else { throw E.builtProductNotFoundForVertex(name: requirements[5]) }
+            guard let dependency7 = builtProductsRegistry[requirements[6]]
+            else { throw E.builtProductNotFoundForVertex(name: requirements[6]) }
+            guard let dependency8 = builtProductsRegistry[requirements[7]]
+            else { throw E.builtProductNotFoundForVertex(name: requirements[7]) }
+            try setup(&product, (dependency1, dependency2, dependency3, dependency4, dependency5, dependency6, dependency7, dependency8))
+
+        case 9:
+            guard let dependency1 = builtProductsRegistry[requirements[0]]
+            else { throw E.builtProductNotFoundForVertex(name: requirements[0]) }
+            guard let dependency2 = builtProductsRegistry[requirements[1]]
+            else { throw E.builtProductNotFoundForVertex(name: requirements[1]) }
+            guard let dependency3 = builtProductsRegistry[requirements[2]]
+            else { throw E.builtProductNotFoundForVertex(name: requirements[2]) }
+            guard let dependency4 = builtProductsRegistry[requirements[3]]
+            else { throw E.builtProductNotFoundForVertex(name: requirements[3]) }
+            guard let dependency5 = builtProductsRegistry[requirements[4]]
+            else { throw E.builtProductNotFoundForVertex(name: requirements[4]) }
+            guard let dependency6 = builtProductsRegistry[requirements[5]]
+            else { throw E.builtProductNotFoundForVertex(name: requirements[5]) }
+            guard let dependency7 = builtProductsRegistry[requirements[6]]
+            else { throw E.builtProductNotFoundForVertex(name: requirements[6]) }
+            guard let dependency8 = builtProductsRegistry[requirements[7]]
+            else { throw E.builtProductNotFoundForVertex(name: requirements[7]) }
+            guard let dependency9 = builtProductsRegistry[requirements[8]]
+            else { throw E.builtProductNotFoundForVertex(name: requirements[8]) }
+            try setup(&product, (dependency1, dependency2, dependency3, dependency4, dependency5, dependency6, dependency7, dependency8, dependency9))
+
+        case 10:
+            guard let dependency1 = builtProductsRegistry[requirements[0]]
+            else { throw E.builtProductNotFoundForVertex(name: requirements[0]) }
+            guard let dependency2 = builtProductsRegistry[requirements[1]]
+            else { throw E.builtProductNotFoundForVertex(name: requirements[1]) }
+            guard let dependency3 = builtProductsRegistry[requirements[2]]
+            else { throw E.builtProductNotFoundForVertex(name: requirements[2]) }
+            guard let dependency4 = builtProductsRegistry[requirements[3]]
+            else { throw E.builtProductNotFoundForVertex(name: requirements[3]) }
+            guard let dependency5 = builtProductsRegistry[requirements[4]]
+            else { throw E.builtProductNotFoundForVertex(name: requirements[4]) }
+            guard let dependency6 = builtProductsRegistry[requirements[5]]
+            else { throw E.builtProductNotFoundForVertex(name: requirements[5]) }
+            guard let dependency7 = builtProductsRegistry[requirements[6]]
+            else { throw E.builtProductNotFoundForVertex(name: requirements[6]) }
+            guard let dependency8 = builtProductsRegistry[requirements[7]]
+            else { throw E.builtProductNotFoundForVertex(name: requirements[7]) }
+            guard let dependency9 = builtProductsRegistry[requirements[8]]
+            else { throw E.builtProductNotFoundForVertex(name: requirements[8]) }
+            guard let dependency10 = builtProductsRegistry[requirements[9]]
+            else { throw E.builtProductNotFoundForVertex(name: requirements[9]) }
+            try setup(&product, (dependency1, dependency2, dependency3, dependency4, dependency5, dependency6, dependency7, dependency8, dependency9, dependency10))
 
         default:
             throw E.factoryLateInitHasTooManyArguments(name: vertex, count: requirements.count)

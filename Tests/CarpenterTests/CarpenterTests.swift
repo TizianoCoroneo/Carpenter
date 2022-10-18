@@ -460,6 +460,10 @@ final class CarpenterTests: XCTestCase {
         var carpenter = Carpenter()
 
         try carpenter.add(Dependency.i)
+        try carpenter.add(Dependency.a)
+        try carpenter.add(Dependency.b)
+        try carpenter.add(Dependency.c)
+        try carpenter.add(Dependency.d)
         try carpenter.add(Dependency.keychain)
         try carpenter.add(Dependency.authClient)
         try carpenter.add(Dependency.urlSession)
@@ -468,11 +472,11 @@ final class CarpenterTests: XCTestCase {
         try carpenter.add(Dependency.fourDependenciesObject)
         try carpenter.add(Dependency.fiveDependenciesObject)
         try carpenter.add(Dependency.sixDependenciesObject)
-        try carpenter.add(Dependency.sevenDependenciesObject)
+        try carpenter.add(Dependency.elevenDependenciesObject)
 
         try await XCTAssertThrowsAsync(try carpenter.build()) { error in
             let carpenterError = try XCTUnwrap(error as? CarpenterError)
-            XCTAssertEqual(carpenterError, .factoryBuilderHasTooManyArguments(name: "SevenDependenciesObject", count: 7))
+            XCTAssertEqual(carpenterError, .factoryBuilderHasTooManyArguments(name: "ElevenDependenciesObject", count: 11))
         }
     }
 

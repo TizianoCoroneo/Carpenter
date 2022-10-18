@@ -25,10 +25,15 @@ public enum Dependency {
     public static var sixDependenciesObject = Factory(SixDependenciesObject.init) { (x: inout SixDependenciesObject) in
         x.i = 7
     }
-    public static var sevenDependenciesObject = Factory(SevenDependenciesObject.init)
+    public static var elevenDependenciesObject = Factory(ElevenDependenciesObject.init)
     public static var cycleA = Factory(CycleA.init)
     public static var cycleB = Factory(CycleB.init)
     public static var cycleC = Factory(CycleC.init)
+    public static var a = Factory(A.init)
+    public static var b = Factory(B.init)
+    public static var c = Factory(C.init)
+    public static var d = Factory(D.init)
+    public static var e = Factory(E.init)
 
     public static let array = Factory {
         [1, 2, 3]
@@ -165,16 +170,44 @@ public struct SixDependenciesObject {
     }
 }
 
-public struct SevenDependenciesObject {
+public struct A {
+    let i: Int
+}
+
+public struct B {
+    let i: Int
+}
+
+public struct C {
+    let i: Int
+}
+
+public struct D {
+    let i: Int
+}
+
+public struct E {
+    let i: Int
+}
+
+public struct F {
+    let i: Int
+}
+
+public struct ElevenDependenciesObject {
     public let apiClient: ApiClient
     public let authClient: AuthClient
     public let threeDependenciesObject: ThreeDependenciesObject
     public let fourDependenciesObject: FourDependenciesObject
     public let fiveDependenciesObject: FiveDependenciesObject
     public let sixDependenciesObject: FiveDependenciesObject
+    public let a: A
+    public let b: B
+    public let c: C
+    public let d: D
     public var i: Int
 
-    public init(apiClient: ApiClient, authClient: AuthClient, threeDependenciesObject: ThreeDependenciesObject, fourDependenciesObject: FourDependenciesObject, fiveDependenciesObject: FiveDependenciesObject, sixDependenciesObject: FiveDependenciesObject, i: Int) {
+    public init(apiClient: ApiClient, authClient: AuthClient, threeDependenciesObject: ThreeDependenciesObject, fourDependenciesObject: FourDependenciesObject, fiveDependenciesObject: FiveDependenciesObject, sixDependenciesObject: FiveDependenciesObject, i: Int, a: A, b: B, c: C, d: D) {
         self.apiClient = apiClient
         self.authClient = authClient
         self.threeDependenciesObject = threeDependenciesObject
@@ -182,6 +215,10 @@ public struct SevenDependenciesObject {
         self.fiveDependenciesObject = fiveDependenciesObject
         self.sixDependenciesObject = sixDependenciesObject
         self.i = i
+        self.a = a
+        self.b = b
+        self.c = c
+        self.d = d
     }
 }
 

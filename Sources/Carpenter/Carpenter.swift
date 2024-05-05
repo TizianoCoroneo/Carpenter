@@ -779,41 +779,40 @@ public struct Carpenter {
 func splitTupleContent(_ tupleContent: String) -> [String] {
     guard tupleContent != "()" else { return [] }
 
-    var tupleContent = tupleContent
+    var tupleContent = Substring(tupleContent).utf8
 
-    if tupleContent.hasPrefix("(") { tupleContent.removeFirst() }
-    if tupleContent.hasSuffix(")") { tupleContent.removeLast() }
+    if tupleContent[tupleContent.startIndex] == 0x28 { tupleContent.removeFirst() }
+    if tupleContent[tupleContent.index(before: tupleContent.endIndex)] == 0x29 { tupleContent.removeLast() }
 
     var angleBracketCount = 0
     var curlyBracketCount = 0
     var squareBracketCount = 0
     var roundBracketCount = 0
 
-    var splitted: [String] = []
     var lastAddedIndex = tupleContent.startIndex
 
-    for i in tupleContent.indices {
-        switch (tupleContent[i]) {
-        case "(": roundBracketCount += 1
-        case ")": roundBracketCount -= 1
-        case "[": squareBracketCount += 1
-        case "]": squareBracketCount -= 1
-        case "{": curlyBracketCount += 1
-        case "}": curlyBracketCount -= 1
-        case "<": angleBracketCount += 1
-        case ">": angleBracketCount -= 1
-        case ",":
+    let elementsWithIndex = zip(tupleContent, tupleContent.indices)
+
+    var splitted: [Substring.UTF8View] = []
+
+    for (element, index) in elementsWithIndex {
+        switch (element) {
+        case 0x28 /* ( */: roundBracketCount += 1
+        case 0x29 /* ) */: roundBracketCount -= 1
+        case 0x5b /* [ */: squareBracketCount += 1
+        case 0x5d /* ] */: squareBracketCount -= 1
+        case 0x7b /* { */: curlyBracketCount += 1
+        case 0x7d /* } */: curlyBracketCount -= 1
+        case 0x3c /* < */: angleBracketCount += 1
+        case 0x3e /* > */: angleBracketCount -= 1
+        case 0x2c /* , */:
             if (roundBracketCount + squareBracketCount + curlyBracketCount + angleBracketCount == 0) {
-                splitted.append(String(tupleContent[lastAddedIndex..<i]))
-                lastAddedIndex = tupleContent.index(i, offsetBy: 2) // Count the space after the comma as well
+                splitted.append(tupleContent[lastAddedIndex..<index])
+                lastAddedIndex = tupleContent.index(index, offsetBy: 2) // Count the space after the comma as well
             }
         default: break
         }
     }
-
-    splitted.append(String(tupleContent[lastAddedIndex..<tupleContent.endIndex])
-        .trimmingCharacters(in: .whitespaces))
-
-    return splitted
+    splitted.append(tupleContent[lastAddedIndex..<tupleContent.endIndex])
+    return splitted.map { x in String(Substring(x)) }
 }
-

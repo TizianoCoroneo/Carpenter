@@ -804,9 +804,8 @@ func splitTupleContent(_ tupleContent: String) -> [String] {
         case ">": angleBracketCount -= 1
         case ",":
             if (roundBracketCount + squareBracketCount + curlyBracketCount + angleBracketCount == 0) {
-                splitted.append(String(tupleContent[lastAddedIndex..<i])
-                    .trimmingCharacters(in: .whitespaces))
-                lastAddedIndex = tupleContent.index(after: i)
+                splitted.append(String(tupleContent[lastAddedIndex..<i]))
+                lastAddedIndex = tupleContent.index(i, offsetBy: 2) // Count the space after the comma as well
             }
         default: break
         }

@@ -565,4 +565,26 @@ final class CarpenterTests: XCTestCase {
             XCTAssertEqual(carpenterError, .factoryAlreadyAdded(name: "Keychain"))
         }
     }
+
+    func test_benchmarkSplitTupleContent() async throws {
+        let tuples: [Any.Type] = Array.init(repeating: [
+            Void.self,
+            (Int).self,
+            (Int, String).self,
+            (Int, String, Bool).self,
+            (Int, String, Bool, UInt8).self,
+        ], count: 10000).flatMap { $0 }
+
+        let tupleStrings = tuples.map { String(describing: $0) }
+        print(tupleStrings)
+
+        self.measure {
+            for tupleString in tupleStrings {
+                blackHole(splitTupleContent(tupleString))
+            }
+        }
+    }
 }
+
+@_optimize(none)
+func blackHole(_ value: Any) {}

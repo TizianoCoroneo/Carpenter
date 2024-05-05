@@ -3,6 +3,8 @@ public struct StartupTask<Requirement, LateRequirement>: FactoryConvertible {
     let key: DependencyKey<Void>
     let builder: (Requirement) throws -> Void
     let lateInit: (LateRequirement) throws -> Void
+    let requirementName = String(describing: Requirement.self)
+    let lateRequirementName = String(describing: LateRequirement.self)
 
     public init(
         _ name: String,
@@ -35,17 +37,17 @@ public struct StartupTask<Requirement, LateRequirement>: FactoryConvertible {
     }
 
     public func eraseToAnyFactory() -> [AnyFactory] {
-        AnyFactory(
+        [ AnyFactory(
             key: key,
-            requirementName: String(describing: Requirement.self),
-            lateRequirementName: String(describing: LateRequirement.self),
+            requirementName: requirementName,
+            lateRequirementName: lateRequirementName,
             kind: .startupTask,
             builder: {
                 guard let requirement = $0 as? Requirement
                 else {
                     throw CarpenterError.requirementHasMismatchingType(
                         resultName: key.name,
-                        expected: String(describing: Requirement.self),
+                        expected: requirementName,
                         type: String(describing: type(of: $0)))
                 }
 
@@ -56,11 +58,11 @@ public struct StartupTask<Requirement, LateRequirement>: FactoryConvertible {
                 else {
                     throw CarpenterError.lateRequirementHasMismatchingType(
                         resultName: key.name,
-                        expected: String(describing: Requirement.self),
+                        expected: requirementName,
                         type: String(describing: type(of: $0)))
                 }
 
                 try self.lateInit(requirement);
-            })
+            }) ]
     }
 }

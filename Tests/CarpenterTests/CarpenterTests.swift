@@ -1,5 +1,6 @@
 import XCTest
 import CarpenterTestUtilities
+import os.log
 @testable import Carpenter
 
 final class CarpenterTests: XCTestCase {
@@ -446,14 +447,14 @@ final class CarpenterTests: XCTestCase {
 
         try carpenter.build()
 
-        _ = try carpenter.get(Dependency.keychain)
-        _ = try carpenter.get(Dependency.authClient)
-        _ = try carpenter.get(Dependency.urlSession)
-        _ = try carpenter.get(Dependency.apiClient)
-        _ = try carpenter.get(Dependency.threeDependenciesObject)
-        _ = try carpenter.get(Dependency.fourDependenciesObject)
-        _ = try carpenter.get(Dependency.fiveDependenciesObject)
-        _ = try carpenter.get(Dependency.sixDependenciesObject)
+        blackHole(try carpenter.get(Dependency.keychain))
+        blackHole(try carpenter.get(Dependency.authClient))
+        blackHole(try carpenter.get(Dependency.urlSession))
+        blackHole(try carpenter.get(Dependency.apiClient))
+        blackHole(try carpenter.get(Dependency.threeDependenciesObject))
+        blackHole(try carpenter.get(Dependency.fourDependenciesObject))
+        blackHole(try carpenter.get(Dependency.fiveDependenciesObject))
+        blackHole(try carpenter.get(Dependency.sixDependenciesObject))
     }
 
     func test_BuildTooBigProducts() async throws {
@@ -566,7 +567,7 @@ final class CarpenterTests: XCTestCase {
         }
     }
 
-    func test_benchmarkSplitTupleContent() async throws {
+    func test_BenchmarkSplitTupleContent() throws {
         let tuples: [Any.Type] = Array.init(repeating: [
             Void.self,
             (Int).self,
@@ -581,6 +582,23 @@ final class CarpenterTests: XCTestCase {
         self.measure {
             for tupleString in tupleStrings {
                 blackHole(splitTupleContent(tupleString))
+            }
+        }
+    }
+
+    func test_BenchmarkLargeProject() throws {
+        let logger = Logger.init(subsystem: "com.measure-tests", category: "Measuring tests")
+        let signposter = OSSignposter(logger: logger)
+
+        self.measure {
+            for _ in 0..<30 {
+                let id = signposter.makeSignpostID()
+                signposter.withIntervalSignpost("Running Carpenter", id: id) {
+                    let generatedByCarpenter = GeneratedByCarpenter()
+                    let c = generatedByCarpenter.makeContainer()
+                    signposter.emitEvent("Accessing container", id: id)
+                    generatedByCarpenter.accessAllInContainer(c)
+                }
             }
         }
     }

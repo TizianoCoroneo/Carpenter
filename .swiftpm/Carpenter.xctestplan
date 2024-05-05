@@ -1,0 +1,24 @@
+{
+  "configurations" : [
+    {
+      "id" : "CA8AC7E9-8BDA-4BE2-8A9A-95897D034D5E",
+      "name" : "Test Scheme Action",
+      "options" : {
+
+      }
+    }
+  ],
+  "defaultOptions" : {
+    "codeCoverage" : false
+  },
+  "testTargets" : [
+    {
+      "target" : {
+        "containerPath" : "container:",
+        "identifier" : "CarpenterTests",
+        "name" : "CarpenterTests"
+      }
+    }
+  ],
+  "version" : 1
+}

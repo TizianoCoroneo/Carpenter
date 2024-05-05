@@ -19,7 +19,7 @@ public struct ProtocolWrapper<ConcreteType, ProtocolType>: FactoryConvertible {
         AnyFactory(
             key: protocolKey,
             requirementName: concreteKey.name,
-            lateRequirementName: String(describing: Void.self),
+            lateRequirementName: "()",
             kind: .protocolFactory,
             builder: {
                 guard let concrete = $0 as? ConcreteType

@@ -147,7 +147,7 @@ struct CarpenterVisualizer {
                 default: break
                 }
 
-                if vertex != String(describing: Void.self) {
+                if vertex != "()" {
                     graphViz.append(node)
                 }
 
@@ -220,7 +220,7 @@ struct CarpenterVisualizer {
             for vertex in graph.vertices {
                 let node = Node(vertex)
 
-                if vertex != String(describing: Void.self) {
+                if vertex != "()" {
                     graphViz.append(node)
                 }
 

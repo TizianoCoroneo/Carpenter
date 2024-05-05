@@ -22,6 +22,9 @@ public struct Factory<Requirement, LateRequirement, Product>: FactoryConvertible
     var key: DependencyKey<Product>
     var builder: (Requirement) throws -> Product
     var lateInit: (inout Product, LateRequirement) throws -> Void
+    let requirementName = String(describing: Requirement.self)
+    let lateRequirementName = String(describing: LateRequirement.self)
+    let productName = String(describing: Product.self)
 
     public init(
         _ builder: @escaping (Requirement) throws -> Product,
@@ -50,17 +53,18 @@ public struct Factory<Requirement, LateRequirement, Product>: FactoryConvertible
     }
 
     public func eraseToAnyFactory() -> [AnyFactory] {
-        AnyFactory(
+        [
+            AnyFactory(
             key: DependencyKey<Product>(),
-            requirementName: String(describing: Requirement.self),
-            lateRequirementName: String(describing: LateRequirement.self),
+            requirementName: requirementName,
+            lateRequirementName: lateRequirementName,
             kind: .objectFactory,
             builder: {
                 guard let requirement = $0 as? Requirement
                 else {
                     throw CarpenterError.requirementHasMismatchingType(
-                        resultName: String(describing: Product.self),
-                        expected: String(describing: Requirement.self),
+                        resultName: productName,
+                        expected: requirementName,
                         type: String(describing: type(of: $0)))
                 }
 
@@ -70,21 +74,22 @@ public struct Factory<Requirement, LateRequirement, Product>: FactoryConvertible
                 guard var product = $0 as? Product
                 else {
                     throw CarpenterError.productHasMismatchingType(
-                        name: String(describing: Product.self),
+                        name: productName,
                         type: String(describing: type(of: $0)))
                 }
 
                 guard let requirement = $1 as? LateRequirement
                 else {
                     throw CarpenterError.lateRequirementHasMismatchingType(
-                        resultName: String(describing: Product.self),
-                        expected: String(describing: Requirement.self),
+                        resultName: productName,
+                        expected: requirementName,
                         type: String(describing: type(of: $0)))
                 }
 
                 try self.lateInit(&product, requirement)
                 $0 = product
             })
+            ]
     }
 }
 

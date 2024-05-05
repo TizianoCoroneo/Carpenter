@@ -160,7 +160,7 @@ final class CarpenterTests: XCTestCase {
 
         print(carpenter.dependencyGraph.description)
 
-        await waitForExpectations(timeout: 0.2)
+        await fulfillment(of: [exp1, exp2, exp3], timeout: 0.2)
     }
 
     func test_AddingStartupTasksMixedIn() async throws {
@@ -210,7 +210,7 @@ final class CarpenterTests: XCTestCase {
 
         try carpenter.build()
 
-        await waitForExpectations(timeout: 0.2)
+        await fulfillment(of: [exp1, exp2, exp3], timeout: 0.2)
 
         print(carpenter.dependencyGraph.description)
     }
@@ -464,6 +464,13 @@ final class CarpenterTests: XCTestCase {
         try carpenter.add(Dependency.b)
         try carpenter.add(Dependency.c)
         try carpenter.add(Dependency.d)
+        try carpenter.add(Dependency.e)
+        try carpenter.add(Dependency.f)
+        try carpenter.add(Dependency.g)
+        try carpenter.add(Dependency.h)
+        try carpenter.add(Dependency.i2)
+        try carpenter.add(Dependency.j)
+
         try carpenter.add(Dependency.keychain)
         try carpenter.add(Dependency.authClient)
         try carpenter.add(Dependency.urlSession)
@@ -472,11 +479,11 @@ final class CarpenterTests: XCTestCase {
         try carpenter.add(Dependency.fourDependenciesObject)
         try carpenter.add(Dependency.fiveDependenciesObject)
         try carpenter.add(Dependency.sixDependenciesObject)
-        try carpenter.add(Dependency.elevenDependenciesObject)
+        try carpenter.add(Dependency.sixteenDependenciesObject)
 
         try await XCTAssertThrowsAsync(try carpenter.build()) { error in
             let carpenterError = try XCTUnwrap(error as? CarpenterError)
-            XCTAssertEqual(carpenterError, .factoryBuilderHasTooManyArguments(name: "ElevenDependenciesObject", count: 11))
+            XCTAssertEqual(carpenterError, .factoryBuilderHasTooManyArguments(name: "SixteenDependenciesObject", count: 16))
         }
     }
 

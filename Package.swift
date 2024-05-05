@@ -1,4 +1,4 @@
-// swift-tools-version: 5.7
+// swift-tools-version: 5.10
 // The swift-tools-version declares the minimum version of Swift required to build this package.
 
 import PackageDescription
@@ -14,9 +14,6 @@ let package = Package(
         .library(
             name: "Carpenter",
             targets: ["Carpenter"]),
-        .library(
-            name: "CarpenterSwiftUI",
-            targets: ["CarpenterSwiftUI"]),
 
         .executable(
             name: "CarpenterVisualizer",
@@ -36,12 +33,6 @@ let package = Package(
             name: "Carpenter",
             dependencies: [
                 "SwiftGraph"
-            ]),
-
-        .target(
-            name: "CarpenterSwiftUI",
-            dependencies: [
-                "Carpenter"
             ]),
 
         .executableTarget(
@@ -65,10 +56,6 @@ let package = Package(
         .testTarget(
             name: "CarpenterTests",
             dependencies: ["CarpenterTestUtilities"]),
-
-        .testTarget(
-            name: "CarpenterSwiftUITests",
-            dependencies: ["CarpenterTestUtilities", "CarpenterSwiftUI"]),
 
         .testTarget(
             name: "CarpenterVisualizerTests",

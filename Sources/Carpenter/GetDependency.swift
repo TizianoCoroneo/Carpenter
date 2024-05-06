@@ -12,7 +12,7 @@
     let carpenter: () -> Carpenter
     let key: DependencyKey<P>
 
-    @available(macOS 14.0.0, *)
+    @available(iOS 17, macOS 14, *)
     public init<Container: DependencyContainer, each Requirement>(
         carpenter: @autoclosure @escaping () -> Carpenter = .shared,
         _ keyPath: KeyPath<Container, Factory<repeat each Requirement, P>>

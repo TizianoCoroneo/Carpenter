@@ -155,7 +155,7 @@ public struct Carpenter {
         return typedResult
     }
 
-    @available(macOS 14.0.0, *)
+    @available(iOS 17, macOS 14, *)
     public func get<each Requirements, Product>(
         _ factory: Factory<repeat each Requirements, Product>
     ) throws -> Product {

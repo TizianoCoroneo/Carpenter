@@ -18,7 +18,7 @@
 ///// has type Factory<(UUID, String), EmailAddress, Counter>
 ///```
 
-@available(macOS 14.0.0, *)
+@available(iOS 17, macOS 14, *)
 public struct Factory<each Requirement, Product>: FactoryConvertible {
     
     var key = ObjectIdentifier(Product.self)
@@ -58,7 +58,7 @@ public struct Factory<each Requirement, Product>: FactoryConvertible {
     }
 }
 
-@available(macOS 14.0.0, *)
+@available(iOS 17, macOS 14, *)
 public struct LateInit<each LateRequirement, Product>: FactoryConvertible {
     var lateInit: (inout Product, repeat each LateRequirement) throws -> Void
     let requirementName = collectIdentifiers(for: repeat (each LateRequirement).self)
@@ -117,81 +117,6 @@ func collectIdentifiers<each Element>(
 
     return list
 }
-
-//public struct Factory<Requirement, LateRequirement, Product>: FactoryConvertible {
-//    var key: DependencyKey<Product>
-//    var builder: (Requirement) throws -> Product
-//    var lateInit: (inout Product, LateRequirement) throws -> Void
-//    let requirementName = String(describing: Requirement.self)
-//    let lateRequirementName = String(describing: LateRequirement.self)
-//    let productName = String(describing: Product.self)
-//
-//    public init(
-//        _ builder: @escaping (Requirement) throws -> Product,
-//        lateInit: @escaping (inout Product, LateRequirement) throws -> Void
-//    ) {
-//        self.key = DependencyKey<Product>()
-//        self.builder = builder
-//        self.lateInit = lateInit
-//    }
-//
-//    public init(
-//        _ builder: @escaping (Requirement) throws -> Product,
-//        lateInit: @escaping (inout Product) throws -> Void
-//    ) where LateRequirement == Void {
-//        self.init(
-//            builder,
-//            lateInit: { (x, _: Void) in try lateInit(&x) })
-//    }
-//
-//    public init(
-//        _ builder: @escaping (Requirement) throws -> Product
-//    ) where LateRequirement == Void {
-//        self.init(
-//            builder,
-//            lateInit: { (_, _: Void) in })
-//    }
-//
-//    public func eraseToAnyFactory() -> [AnyFactory] {
-//        [
-//            AnyFactory(
-//            key: DependencyKey<Product>(),
-//            requirementName: requirementName,
-//            lateRequirementName: lateRequirementName,
-//            kind: .objectFactory,
-//            builder: {
-//                guard let requirement = $0 as? Requirement
-//                else {
-//                    throw CarpenterError.requirementHasMismatchingType(
-//                        resultName: productName,
-//                        expected: requirementName,
-//                        type: String(describing: type(of: $0)))
-//                }
-//
-//                return try self.builder(requirement)
-//            },
-//            lateInit: {
-//                guard var product = $0 as? Product
-//                else {
-//                    throw CarpenterError.productHasMismatchingType(
-//                        name: productName,
-//                        type: String(describing: type(of: $0)))
-//                }
-//
-//                guard let requirement = $1 as? LateRequirement
-//                else {
-//                    throw CarpenterError.lateRequirementHasMismatchingType(
-//                        resultName: productName,
-//                        expected: requirementName,
-//                        type: String(describing: type(of: $0)))
-//                }
-//
-//                try self.lateInit(&product, requirement)
-//                $0 = product
-//            })
-//            ]
-//    }
-//}
 
 public protocol FactoryConvertible {
     @FactoryBuilder

@@ -1,5 +1,5 @@
 
-@available(macOS 14.0.0, *)
+@available(iOS 17, macOS 14, *)
 public struct StartupTask<each Requirement, LateRequirement>: FactoryConvertible {
     let key: DependencyKey<Void>
     let builder: (repeat each Requirement) throws -> Void

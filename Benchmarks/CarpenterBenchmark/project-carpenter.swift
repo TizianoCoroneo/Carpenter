@@ -1,6 +1,6 @@
 import Carpenter
 
-@available(macOS 14, *)
+@available(iOS 17, macOS 14, *)
 final class CarpenterContainer: DependencyContainer {
     static var shared: CarpenterContainer = .init()
     init() {}
@@ -198,7 +198,7 @@ final class CarpenterContainer: DependencyContainer {
     let mock_12 = Factory(Mock_12.init)
 }
 
-@available(macOS 14, *)
+@available(iOS 17, macOS 14, *)
 struct GeneratedByCarpenter {
     init() {}
 

@@ -4,7 +4,7 @@ import class Foundation.Bundle
 
 // MARK: - Factories
 
-@available(macOS 14.0.0, *)
+@available(iOS 17, macOS 14, *)
 public enum Dependency {
 
     public static var i = Factory { 0 }

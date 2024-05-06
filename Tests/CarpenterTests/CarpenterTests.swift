@@ -3,46 +3,10 @@ import CarpenterTestUtilities
 import os.log
 @testable import Carpenter
 
-@available(macOS 14.0.0, *)
+@available(iOS 17, macOS 14, *)
 final class CarpenterTests: XCTestCase {
 
     let logger = Logger(subsystem: "com.tiziano.carpenter.tests", category: "Carpenter Tests")
-
-    func test_splitRequirements_simple() throws {
-        let test = "ApiClient"
-        let splitted = splitTupleContent(test)
-        XCTAssertEqual(splitted, ["ApiClient"])
-    }
-
-    func test_splitRequirements_array() throws {
-        let test = "[ApiClient]"
-        let splitted = splitTupleContent(test)
-        XCTAssertEqual(splitted, ["[ApiClient]"])
-    }
-
-    func test_splitRequirements_dictionary() throws {
-        let test = "[ApiClient: String]"
-        let splitted = splitTupleContent(test)
-        XCTAssertEqual(splitted, ["[ApiClient: String]"])
-    }
-
-    func test_splitRequirements_tuple() throws {
-        let test = "(String, Int)"
-        let splitted = splitTupleContent(test)
-        XCTAssertEqual(splitted, ["String", "Int"])
-    }
-
-    func test_splitRequirements_nestedTuple() throws {
-        let test = "((String, Int), (String, Double))"
-        let splitted = splitTupleContent(test)
-        XCTAssertEqual(splitted, ["(String, Int)", "(String, Double)"])
-    }
-
-    func test_splitRequirements_complexType() throws {
-        let test = "(Dictionary[String: (String, Int)], Dictionary[(String, Int): Double], Array[(Int, Int, Int)])"
-        let splitted = splitTupleContent(test)
-        XCTAssertEqual(splitted, ["Dictionary[String: (String, Int)]", "Dictionary[(String, Int): Double]", "Array[(Int, Int, Int)]"])
-    }
 
     func test_AddingDependeciesInOrder() async throws {
         var carpenter = Carpenter()
@@ -550,24 +514,6 @@ final class CarpenterTests: XCTestCase {
         }
     }
 
-    func test_BenchmarkSplitTupleContent() throws {
-        let tuples: [Any.Type] = Array.init(repeating: [
-            Void.self,
-            (Int).self,
-            (Int, String).self,
-            (Int, String, Bool).self,
-            (Int, String, Bool, UInt8).self,
-        ], count: 10000).flatMap { $0 }
-
-        let tupleStrings = tuples.map { String(describing: $0) }
-
-        self.measure {
-            for tupleString in tupleStrings {
-                blackHole(splitTupleContent(tupleString))
-            }
-        }
-    }
-
     func test_ProfileLargeProject() throws {
         let signposter = OSSignposter(logger: logger)
 
@@ -609,7 +555,7 @@ final class CarpenterTests: XCTestCase {
     }
 }
 
-@available(macOS 14.0.0, *)
+@available(iOS 17, macOS 14, *)
 extension Dependency {
     public static func startupTask1(exp: XCTestExpectation) -> StartupTask<ApiClient, Void> {
         StartupTask("Task 1") { (x: ApiClient) in

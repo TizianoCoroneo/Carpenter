@@ -39,14 +39,19 @@ public struct Factory<each Requirement, Product>: FactoryConvertible {
                 requirementName: requirementName,
                 kind: .objectFactory,
                 builder: .early {
-                    guard let requirement = $0 as? (repeat each Requirement)
-                    else {
-                        throw CarpenterError.requirementHasMismatchingType(
-                            resultName: productName.eraseToAnyDependencyKey(),
-                            expected: requirementName,
-                            type: .init(metatype: type(of: $0)))
+                    var count = 0
+                    func cast<R>(_ value: [Any], to r: R.Type = R.self) throws -> R {
+                        defer { count += 1 }
+                        guard let castValue = value[count] as? R else {
+                            throw CarpenterError.requirementHasMismatchingType(
+                                resultName: productName.eraseToAnyDependencyKey(),
+                                expected: requirementName,
+                                type: .init(metatype: type(of: value[count])))
+                        }
+                        return castValue
                     }
 
+                    let requirement = try (repeat cast($0, to: (each Requirement).self))
                     return try self.builder(repeat each requirement)
                 })
         ]
@@ -79,14 +84,19 @@ public struct LateInit<each LateRequirement, Product>: FactoryConvertible {
                             type: .init(metatype: type(of: $0)))
                     }
 
-                    guard let requirement = $1 as? (repeat each LateRequirement)
-                    else {
-                        throw CarpenterError.lateRequirementHasMismatchingType(
-                            resultName: productName.eraseToAnyDependencyKey(),
-                            expected: requirementName,
-                            type: .init(metatype: type(of: $0)))
+                    var count = 0
+                    func cast<R>(_ value: [Any], to r: R.Type = R.self) throws -> R {
+                        defer { count += 1 }
+                        guard let castValue = value[count] as? R else {
+                            throw CarpenterError.lateRequirementHasMismatchingType(
+                                resultName: productName.eraseToAnyDependencyKey(),
+                                expected: requirementName,
+                                type: .init(metatype: type(of: value[count])))
+                        }
+                        return castValue
                     }
 
+                    let requirement = try (repeat cast($1, to: (each LateRequirement).self))
                     try self.lateInit(&product, repeat each requirement)
                     $0 = product
             })
@@ -96,8 +106,8 @@ public struct LateInit<each LateRequirement, Product>: FactoryConvertible {
 
 func collectIdentifiers<each Element>(
     for types: repeat (each Element).Type
-) -> [AnyDependencyKey] {
-    var list = [AnyDependencyKey]()
+) -> ContiguousArray<AnyDependencyKey> {
+    var list = ContiguousArray<AnyDependencyKey>()
 
     func adder<T>(_ type: T.Type = T.self) {
         list.append(AnyDependencyKey.init(T.self))
@@ -196,13 +206,13 @@ public struct AnyFactory {
     }
 
     public enum Builder {
-        case early((Any) throws -> Any)
-        case late((inout Any, Any) throws -> Void)
+        case early(([Any]) throws -> Any)
+        case late((inout Any, [Any]) throws -> Void)
     }
 
     public init<Product>(
         key: DependencyKey<Product>,
-        requirementName: [AnyDependencyKey],
+        requirementName: ContiguousArray<AnyDependencyKey>,
         kind: Kind,
         builder: Builder
     ) {
@@ -212,7 +222,7 @@ public struct AnyFactory {
         self.builder = builder
     }
 
-    let requirementName: [AnyDependencyKey]
+    let requirementName: ContiguousArray<AnyDependencyKey>
     let productName: Vertex
     let kind: Kind
     let builder: Builder

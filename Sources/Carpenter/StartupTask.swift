@@ -19,13 +19,19 @@ public struct StartupTask<each Requirement, LateRequirement>: FactoryConvertible
             requirementName: requirementName,
             kind: .startupTask,
             builder: .early {
-                guard let requirement = $0 as? (repeat each Requirement)
-                else {
-                    throw CarpenterError.requirementHasMismatchingType(
-                        resultName: key.eraseToAnyDependencyKey(),
-                        expected: requirementName,
-                        type: .init(metatype: type(of: $0)))
+                var count = 0
+                func cast<R>(_ value: [Any], to r: R.Type = R.self) throws -> R {
+                    defer { count += 1 }
+                    guard let castValue = value[count] as? R else {
+                        throw CarpenterError.requirementHasMismatchingType(
+                            resultName: key.eraseToAnyDependencyKey(),
+                            expected: requirementName,
+                            type: .init(metatype: type(of: value[count])))
+                    }
+                    return castValue
                 }
+
+                let requirement = try (repeat cast($0, to: (each Requirement).self))
 
                 return try self.builder(repeat each requirement)
             })

@@ -462,37 +462,6 @@ final class CarpenterTests: XCTestCase {
         blackHole(try carpenter.get(Dependency.sixDependenciesObject))
     }
 
-    func test_BuildTooBigProducts() async throws {
-        var carpenter = Carpenter()
-
-        try carpenter.add(Dependency.i)
-        try carpenter.add(Dependency.a)
-        try carpenter.add(Dependency.b)
-        try carpenter.add(Dependency.c)
-        try carpenter.add(Dependency.d)
-        try carpenter.add(Dependency.e)
-        try carpenter.add(Dependency.f)
-        try carpenter.add(Dependency.g)
-        try carpenter.add(Dependency.h)
-        try carpenter.add(Dependency.i2)
-        try carpenter.add(Dependency.j)
-
-        try carpenter.add(Dependency.keychain)
-        try carpenter.add(Dependency.authClient)
-        try carpenter.add(Dependency.urlSession)
-        try carpenter.add(Dependency.apiClient)
-        try carpenter.add(Dependency.threeDependenciesObject)
-        try carpenter.add(Dependency.fourDependenciesObject)
-        try carpenter.add(Dependency.fiveDependenciesObject)
-        try carpenter.add(Dependency.sixDependenciesObject)
-        try carpenter.add(Dependency.sixteenDependenciesObject)
-
-        try await XCTAssertThrowsAsync(try carpenter.build()) { error in
-            let carpenterError = try XCTUnwrap(error as? CarpenterError)
-            XCTAssertEqual(carpenterError, .factoryBuilderHasTooManyArguments(name: .init(SixteenDependenciesObject.self), count: 16))
-        }
-    }
-
     func test_BuildWithLateInit() async throws {
         var carpenter = Carpenter()
 

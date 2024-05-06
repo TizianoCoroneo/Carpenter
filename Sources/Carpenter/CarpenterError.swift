@@ -2,8 +2,8 @@
 public enum CarpenterError: Error, Equatable, CustomStringConvertible {
     case requirementNotFound(name: Vertex, requestedBy: Vertex)
     case requirementNotFoundForLateInitialization(name: Vertex, requestedBy: Vertex)
-    case requirementHasMismatchingType(resultName: Vertex, expected: [Vertex], type: Vertex)
-    case lateRequirementHasMismatchingType(resultName: Vertex, expected: [Vertex], type: Vertex)
+    case requirementHasMismatchingType(resultName: Vertex, expected: ContiguousArray<Vertex>, type: Vertex)
+    case lateRequirementHasMismatchingType(resultName: Vertex, expected: ContiguousArray<Vertex>, type: Vertex)
     case cannotRetrieveRequirementsForProduct(name: Vertex)
     case cannotRetrieveLateRequirementsForProduct(name: Vertex)
     case cannotRetrieveFactoryBuilder(name: Vertex)

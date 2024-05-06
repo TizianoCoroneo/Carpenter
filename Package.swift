@@ -8,14 +8,14 @@ import os.log
 let logger = Logger(subsystem: "Carpenter", category: "Packaging")
 logger.log("Hello Carpenter!")
 
-let buildBenchmark = true
-let buildVisualizer = true
+let buildBenchmark = false
+let buildVisualizer = false
 
 let package = Package(
     name: "Carpenter",
     platforms: [
-        .macOS(.v10_15),
-        .iOS(.v13),
+        .macOS(.v14),
+        .iOS(.v17),
     ],
     products: [
         .library(
@@ -23,7 +23,7 @@ let package = Package(
             targets: ["Carpenter"]),
     ],
     dependencies: [
-        .package(url: "https://github.com/davecom/SwiftGraph", from: "3.1.0")
+        .package(url: "https://github.com/mrwerdo/SwiftGraph", branch: "master")
     ],
     targets: [
         // MARK: - Source
@@ -32,7 +32,11 @@ let package = Package(
             name: "Carpenter",
             dependencies: [
                 "SwiftGraph"
-            ]),
+            ]
+            , swiftSettings: [
+                .unsafeFlags(["-no-whole-module-optimization"]) // Without this flag we crash the 5.10 compiler
+            ]
+        ),
 
         .target(
             name: "CarpenterTestUtilities",
@@ -89,7 +93,6 @@ if hasEnvironmentVariable("BENCHMARK") || buildBenchmark {
             dependencies: [
                 .product(name: "Benchmark", package: "package-benchmark"),
                 "Carpenter",
-                "CarpenterTestUtilities",
             ],
             path: "Benchmarks/CarpenterBenchmark",
             plugins: [

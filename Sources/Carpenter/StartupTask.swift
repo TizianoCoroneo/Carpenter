@@ -1,68 +1,34 @@
 
-public struct StartupTask<Requirement, LateRequirement>: FactoryConvertible {
+@available(macOS 14.0.0, *)
+public struct StartupTask<each Requirement, LateRequirement>: FactoryConvertible {
     let key: DependencyKey<Void>
-    let builder: (Requirement) throws -> Void
-    let lateInit: (LateRequirement) throws -> Void
-    let requirementName = String(describing: Requirement.self)
-    let lateRequirementName = String(describing: LateRequirement.self)
+    let builder: (repeat each Requirement) throws -> Void
+    let requirementName = collectIdentifiers(for: repeat (each Requirement).self)
 
     public init(
         _ name: String,
-        _ builder: @escaping (Requirement) throws -> Void,
-        lateInit: @escaping (LateRequirement) throws -> Void
+        _ builder: @escaping (repeat each Requirement) throws -> Void
     ) {
-        self.key = DependencyKey(name: name)
+        self.key = DependencyKey.name(name)
         self.builder = builder
-        self.lateInit = lateInit
-    }
-
-    public init(
-        _ name: String,
-        lateInit: @escaping (LateRequirement) throws -> Void
-    ) where Requirement == Void {
-        self.init(
-            name,
-            {},
-            lateInit: lateInit)
-    }
-
-    public init(
-        _ name: String,
-        _ builder: @escaping (Requirement) throws -> Void
-    ) where LateRequirement == Void {
-        self.init(
-            name,
-            builder,
-            lateInit: { (_: Void) in })
     }
 
     public func eraseToAnyFactory() -> [AnyFactory] {
         [ AnyFactory(
             key: key,
             requirementName: requirementName,
-            lateRequirementName: lateRequirementName,
             kind: .startupTask,
-            builder: {
-                guard let requirement = $0 as? Requirement
+            builder: .early {
+                guard let requirement = $0 as? (repeat each Requirement)
                 else {
                     throw CarpenterError.requirementHasMismatchingType(
-                        resultName: key.name,
+                        resultName: key.eraseToAnyDependencyKey(),
                         expected: requirementName,
-                        type: String(describing: type(of: $0)))
+                        type: .init(metatype: type(of: $0)))
                 }
 
-                return try self.builder(requirement)
-            },
-            lateInit: {
-                guard let requirement = $1 as? LateRequirement
-                else {
-                    throw CarpenterError.lateRequirementHasMismatchingType(
-                        resultName: key.name,
-                        expected: requirementName,
-                        type: String(describing: type(of: $0)))
-                }
-
-                try self.lateInit(requirement);
-            }) ]
+                return try self.builder(repeat each requirement)
+            })
+        ]
     }
 }

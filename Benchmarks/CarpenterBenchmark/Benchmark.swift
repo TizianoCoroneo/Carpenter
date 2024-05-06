@@ -3,7 +3,6 @@
 import Benchmark
 import Foundation
 import os.log
-import CarpenterTestUtilities
 
 let logger = Logger(subsystem: "com.tiziano.carpenter.benchmarks", category: "Carpenter Benchmarks")
 
@@ -14,16 +13,19 @@ let benchmarks = {
         for _ in benchmark.scaledIterations {
             let id = signposter.makeSignpostID()
             signposter.withIntervalSignpost("Running Carpenter", id: id) {
-                let generatedByCarpenter = GeneratedByCarpenter()
+                if #available(macOS 14, *) {
 
-                let c = signposter.withIntervalSignpost("Creating container", id: id) {
-                    benchmark.startMeasurement()
-                    let result = generatedByCarpenter.makeContainer()
-                    benchmark.stopMeasurement()
-                    return result
+                    let generatedByCarpenter = GeneratedByCarpenter()
+
+                    let c = signposter.withIntervalSignpost("Creating container", id: id) {
+                        benchmark.startMeasurement()
+                        let result = generatedByCarpenter.makeContainer()
+                        benchmark.stopMeasurement()
+                        return result
+                    }
+
+                    blackHole(c)
                 }
-
-                blackHole(c)
             }
         }
     }
@@ -34,16 +36,18 @@ let benchmarks = {
         for _ in benchmark.scaledIterations {
             let id = signposter.makeSignpostID()
             signposter.withIntervalSignpost("Running Carpenter", id: id) {
-                let generatedByCarpenter = GeneratedByCarpenter()
+                if #available(macOS 14, *) {
+                    let generatedByCarpenter = GeneratedByCarpenter()
 
-                let c = signposter.withIntervalSignpost("Creating container", id: id) {
-                    generatedByCarpenter.makeContainer()
-                }
+                    let c = signposter.withIntervalSignpost("Creating container", id: id) {
+                        generatedByCarpenter.makeContainer()
+                    }
 
-                signposter.withIntervalSignpost("Accessing container") {
-                    benchmark.startMeasurement()
-                    generatedByCarpenter.accessAllInContainer(c)
-                    benchmark.stopMeasurement()
+                    signposter.withIntervalSignpost("Accessing container") {
+                        benchmark.startMeasurement()
+                        generatedByCarpenter.accessAllInContainer(c)
+                        benchmark.stopMeasurement()
+                    }
                 }
             }
         }
@@ -55,11 +59,13 @@ let benchmarks = {
         for _ in benchmark.scaledIterations {
             let id = signposter.makeSignpostID()
             signposter.withIntervalSignpost("Running Carpenter", id: id) {
-                let generatedByCarpenter = GeneratedByCarpenter()
-                benchmark.startMeasurement()
-                let c = generatedByCarpenter.makeContainer()
-                generatedByCarpenter.accessAllInContainer(c)
-                benchmark.stopMeasurement()
+                if #available(macOS 14, *) {
+                    let generatedByCarpenter = GeneratedByCarpenter()
+                    benchmark.startMeasurement()
+                    let c = generatedByCarpenter.makeContainer()
+                    generatedByCarpenter.accessAllInContainer(c)
+                    benchmark.stopMeasurement()
+                }
             }
         }
     }

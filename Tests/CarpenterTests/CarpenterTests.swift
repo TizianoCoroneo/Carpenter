@@ -3,6 +3,7 @@ import CarpenterTestUtilities
 import os.log
 @testable import Carpenter
 
+@available(macOS 14.0.0, *)
 final class CarpenterTests: XCTestCase {
 
     let logger = Logger(subsystem: "com.tiziano.carpenter.tests", category: "Carpenter Tests")
@@ -55,22 +56,22 @@ final class CarpenterTests: XCTestCase {
 
         try carpenter.finalizeGraph()
 
-        XCTAssertVertexExists(carpenter, name: "Int")
-        XCTAssertVertexExists(carpenter, name: "ApiClient")
-        XCTAssertVertexExists(carpenter, name: "Session")
-        XCTAssertVertexExists(carpenter, name: "AuthClient")
-        XCTAssertVertexExists(carpenter, name: "Keychain")
-        XCTAssertVertexExists(carpenter, name: "ThreeDependenciesObject")
+        XCTAssertVertexExists(carpenter, type: Int.self)
+        XCTAssertVertexExists(carpenter, type: ApiClient.self)
+        XCTAssertVertexExists(carpenter, type: Session.self)
+        XCTAssertVertexExists(carpenter, type: AuthClient.self)
+        XCTAssertVertexExists(carpenter, type: Keychain.self)
+        XCTAssertVertexExists(carpenter, type: ThreeDependenciesObject.self)
 
-        XCTAssertEdgeExists(carpenter, from: "Int", to: "ApiClient")
-        XCTAssertEdgeExists(carpenter, from: "Int", to: "AuthClient")
-        XCTAssertEdgeExists(carpenter, from: "Int", to: "Keychain")
-        XCTAssertEdgeExists(carpenter, from: "Int", to: "ThreeDependenciesObject")
-        XCTAssertEdgeExists(carpenter, from: "Session", to: "ApiClient")
-        XCTAssertEdgeExists(carpenter, from: "AuthClient", to: "ApiClient")
-        XCTAssertEdgeExists(carpenter, from: "Keychain", to: "AuthClient")
-        XCTAssertEdgeExists(carpenter, from: "ApiClient", to: "ThreeDependenciesObject")
-        XCTAssertEdgeExists(carpenter, from: "AuthClient", to: "ThreeDependenciesObject")
+        XCTAssertEdgeExists(carpenter, from: Int.self, to: ApiClient.self)
+        XCTAssertEdgeExists(carpenter, from: Int.self, to: AuthClient.self)
+        XCTAssertEdgeExists(carpenter, from: Int.self, to: Keychain.self)
+        XCTAssertEdgeExists(carpenter, from: Int.self, to: ThreeDependenciesObject.self)
+        XCTAssertEdgeExists(carpenter, from: Session.self, to: ApiClient.self)
+        XCTAssertEdgeExists(carpenter, from: AuthClient.self, to: ApiClient.self)
+        XCTAssertEdgeExists(carpenter, from: Keychain.self, to: AuthClient.self)
+        XCTAssertEdgeExists(carpenter, from: ApiClient.self, to: ThreeDependenciesObject.self)
+        XCTAssertEdgeExists(carpenter, from: AuthClient.self, to: ThreeDependenciesObject.self)
 
         XCTAssertEqual(carpenter.dependencyGraph.vertexCount, 6)
         XCTAssertEqual(carpenter.dependencyGraph.edgeCount, 9)
@@ -90,22 +91,22 @@ final class CarpenterTests: XCTestCase {
 
         try carpenter.finalizeGraph()
 
-        XCTAssertVertexExists(carpenter, name: "Int")
-        XCTAssertVertexExists(carpenter, name: "ApiClient")
-        XCTAssertVertexExists(carpenter, name: "Session")
-        XCTAssertVertexExists(carpenter, name: "AuthClient")
-        XCTAssertVertexExists(carpenter, name: "Keychain")
-        XCTAssertVertexExists(carpenter, name: "ThreeDependenciesObject")
+        XCTAssertVertexExists(carpenter, type: Int.self)
+        XCTAssertVertexExists(carpenter, type: ApiClient.self)
+        XCTAssertVertexExists(carpenter, type: Session.self)
+        XCTAssertVertexExists(carpenter, type: AuthClient.self)
+        XCTAssertVertexExists(carpenter, type: Keychain.self)
+        XCTAssertVertexExists(carpenter, type: ThreeDependenciesObject.self)
 
-        XCTAssertEdgeExists(carpenter, from: "Int", to: "ApiClient")
-        XCTAssertEdgeExists(carpenter, from: "Int", to: "AuthClient")
-        XCTAssertEdgeExists(carpenter, from: "Int", to: "Keychain")
-        XCTAssertEdgeExists(carpenter, from: "Int", to: "ThreeDependenciesObject")
-        XCTAssertEdgeExists(carpenter, from: "Session", to: "ApiClient")
-        XCTAssertEdgeExists(carpenter, from: "AuthClient", to: "ApiClient")
-        XCTAssertEdgeExists(carpenter, from: "Keychain", to: "AuthClient")
-        XCTAssertEdgeExists(carpenter, from: "ApiClient", to: "ThreeDependenciesObject")
-        XCTAssertEdgeExists(carpenter, from: "AuthClient", to: "ThreeDependenciesObject")
+        XCTAssertEdgeExists(carpenter, from: Int.self, to: ApiClient.self)
+        XCTAssertEdgeExists(carpenter, from: Int.self, to: AuthClient.self)
+        XCTAssertEdgeExists(carpenter, from: Int.self, to: Keychain.self)
+        XCTAssertEdgeExists(carpenter, from: Int.self, to: ThreeDependenciesObject.self)
+        XCTAssertEdgeExists(carpenter, from: Session.self, to: ApiClient.self)
+        XCTAssertEdgeExists(carpenter, from: AuthClient.self, to: ApiClient.self)
+        XCTAssertEdgeExists(carpenter, from: Keychain.self, to: AuthClient.self)
+        XCTAssertEdgeExists(carpenter, from: ApiClient.self, to: ThreeDependenciesObject.self)
+        XCTAssertEdgeExists(carpenter, from: AuthClient.self, to: ThreeDependenciesObject.self)
 
         XCTAssertEqual(carpenter.dependencyGraph.vertexCount, 6)
         XCTAssertEqual(carpenter.dependencyGraph.edgeCount, 9)
@@ -135,28 +136,28 @@ final class CarpenterTests: XCTestCase {
 
         try carpenter.finalizeGraph()
 
-        XCTAssertVertexExists(carpenter, name: "Int")
-        XCTAssertVertexExists(carpenter, name: "ApiClient")
-        XCTAssertVertexExists(carpenter, name: "Session")
-        XCTAssertVertexExists(carpenter, name: "AuthClient")
-        XCTAssertVertexExists(carpenter, name: "Keychain")
-        XCTAssertVertexExists(carpenter, name: "ThreeDependenciesObject")
+        XCTAssertVertexExists(carpenter, type: Int.self)
+        XCTAssertVertexExists(carpenter, type: ApiClient.self)
+        XCTAssertVertexExists(carpenter, type: Session.self)
+        XCTAssertVertexExists(carpenter, type: AuthClient.self)
+        XCTAssertVertexExists(carpenter, type: Keychain.self)
+        XCTAssertVertexExists(carpenter, type: ThreeDependenciesObject.self)
         XCTAssertVertexExists(carpenter, name: "Task 1")
         XCTAssertVertexExists(carpenter, name: "Task 2")
         XCTAssertVertexExists(carpenter, name: "Task 3")
 
-        XCTAssertEdgeExists(carpenter, from: "Int", to: "ApiClient")
-        XCTAssertEdgeExists(carpenter, from: "Int", to: "AuthClient")
-        XCTAssertEdgeExists(carpenter, from: "Int", to: "Keychain")
-        XCTAssertEdgeExists(carpenter, from: "Int", to: "ThreeDependenciesObject")
-        XCTAssertEdgeExists(carpenter, from: "Session", to: "ApiClient")
-        XCTAssertEdgeExists(carpenter, from: "AuthClient", to: "ApiClient")
-        XCTAssertEdgeExists(carpenter, from: "Keychain", to: "AuthClient")
-        XCTAssertEdgeExists(carpenter, from: "ApiClient", to: "ThreeDependenciesObject")
-        XCTAssertEdgeExists(carpenter, from: "AuthClient", to: "ThreeDependenciesObject")
-        XCTAssertEdgeExists(carpenter, from: "ApiClient", to: "Task 1")
-        XCTAssertEdgeExists(carpenter, from: "Session", to: "Task 2")
-        XCTAssertEdgeExists(carpenter, from: "AuthClient", to: "Task 3")
+        XCTAssertEdgeExists(carpenter, from: Int.self, to: ApiClient.self)
+        XCTAssertEdgeExists(carpenter, from: Int.self, to: AuthClient.self)
+        XCTAssertEdgeExists(carpenter, from: Int.self, to: Keychain.self)
+        XCTAssertEdgeExists(carpenter, from: Int.self, to: ThreeDependenciesObject.self)
+        XCTAssertEdgeExists(carpenter, from: Session.self, to: ApiClient.self)
+        XCTAssertEdgeExists(carpenter, from: AuthClient.self, to: ApiClient.self)
+        XCTAssertEdgeExists(carpenter, from: Keychain.self, to: AuthClient.self)
+        XCTAssertEdgeExists(carpenter, from: ApiClient.self, to: ThreeDependenciesObject.self)
+        XCTAssertEdgeExists(carpenter, from: AuthClient.self, to: ThreeDependenciesObject.self)
+        XCTAssertEdgeExists(carpenter, from: ApiClient.self, to: "Task 1")
+        XCTAssertEdgeExists(carpenter, from: Session.self, to: "Task 2")
+        XCTAssertEdgeExists(carpenter, from: AuthClient.self, to: "Task 3")
 
         XCTAssertEqual(carpenter.dependencyGraph.vertexCount, 9)
         XCTAssertEqual(carpenter.dependencyGraph.edgeCount, 12)
@@ -179,34 +180,36 @@ final class CarpenterTests: XCTestCase {
         try carpenter.add(Dependency.urlSession)
         try carpenter.add(Dependency.startupTask2(exp: exp2))
         try carpenter.add(Dependency.authClient)
+        try carpenter.add(Dependency.authLateInit)
         try carpenter.add(Dependency.startupTask3(exp: exp3))
         try carpenter.add(Dependency.keychain)
+        try carpenter.add(Dependency.keychainLateInit)
         try carpenter.add(Dependency.i)
 
         try carpenter.finalizeGraph()
 
-        XCTAssertVertexExists(carpenter, name: "Int")
-        XCTAssertVertexExists(carpenter, name: "ApiClient")
-        XCTAssertVertexExists(carpenter, name: "Session")
-        XCTAssertVertexExists(carpenter, name: "AuthClient")
-        XCTAssertVertexExists(carpenter, name: "Keychain")
-        XCTAssertVertexExists(carpenter, name: "ThreeDependenciesObject")
+        XCTAssertVertexExists(carpenter, type: Int.self)
+        XCTAssertVertexExists(carpenter, type: ApiClient.self)
+        XCTAssertVertexExists(carpenter, type: Session.self)
+        XCTAssertVertexExists(carpenter, type: AuthClient.self)
+        XCTAssertVertexExists(carpenter, type: Keychain.self)
+        XCTAssertVertexExists(carpenter, type: ThreeDependenciesObject.self)
         XCTAssertVertexExists(carpenter, name: "Task 1")
         XCTAssertVertexExists(carpenter, name: "Task 2")
         XCTAssertVertexExists(carpenter, name: "Task 3")
 
-        XCTAssertEdgeExists(carpenter, from: "Int", to: "ApiClient")
-        XCTAssertEdgeExists(carpenter, from: "Int", to: "AuthClient")
-        XCTAssertEdgeExists(carpenter, from: "Int", to: "Keychain")
-        XCTAssertEdgeExists(carpenter, from: "Int", to: "ThreeDependenciesObject")
-        XCTAssertEdgeExists(carpenter, from: "Session", to: "ApiClient")
-        XCTAssertEdgeExists(carpenter, from: "AuthClient", to: "ApiClient")
-        XCTAssertEdgeExists(carpenter, from: "Keychain", to: "AuthClient")
-        XCTAssertEdgeExists(carpenter, from: "ApiClient", to: "ThreeDependenciesObject")
-        XCTAssertEdgeExists(carpenter, from: "AuthClient", to: "ThreeDependenciesObject")
-        XCTAssertEdgeExists(carpenter, from: "ApiClient", to: "Task 1")
-        XCTAssertEdgeExists(carpenter, from: "Session", to: "Task 2")
-        XCTAssertEdgeExists(carpenter, from: "AuthClient", to: "Task 3")
+        XCTAssertEdgeExists(carpenter, from: Int.self, to: ApiClient.self)
+        XCTAssertEdgeExists(carpenter, from: Int.self, to: AuthClient.self)
+        XCTAssertEdgeExists(carpenter, from: Int.self, to: Keychain.self)
+        XCTAssertEdgeExists(carpenter, from: Int.self, to: ThreeDependenciesObject.self)
+        XCTAssertEdgeExists(carpenter, from: Session.self, to: ApiClient.self)
+        XCTAssertEdgeExists(carpenter, from: AuthClient.self, to: ApiClient.self)
+        XCTAssertEdgeExists(carpenter, from: Keychain.self, to: AuthClient.self)
+        XCTAssertEdgeExists(carpenter, from: ApiClient.self, to: ThreeDependenciesObject.self)
+        XCTAssertEdgeExists(carpenter, from: AuthClient.self, to: ThreeDependenciesObject.self)
+        XCTAssertEdgeExists(carpenter, from: ApiClient.self, to: "Task 1")
+        XCTAssertEdgeExists(carpenter, from: Session.self, to: "Task 2")
+        XCTAssertEdgeExists(carpenter, from: AuthClient.self, to: "Task 3")
 
         XCTAssertEqual(carpenter.dependencyGraph.vertexCount, 9)
         XCTAssertEqual(carpenter.dependencyGraph.edgeCount, 12)
@@ -230,22 +233,22 @@ final class CarpenterTests: XCTestCase {
 
         try carpenter.finalizeGraph()
 
-        XCTAssertVertexExists(carpenter, name: "Int")
-        XCTAssertVertexExists(carpenter, name: "ApiClient")
-        XCTAssertVertexExists(carpenter, name: "Session")
-        XCTAssertVertexExists(carpenter, name: "AuthClient")
-        XCTAssertVertexExists(carpenter, name: "Keychain")
-        XCTAssertVertexExists(carpenter, name: "ThreeDependenciesObject")
+        XCTAssertVertexExists(carpenter, type: Int.self)
+        XCTAssertVertexExists(carpenter, type: ApiClient.self)
+        XCTAssertVertexExists(carpenter, type: Session.self)
+        XCTAssertVertexExists(carpenter, type: AuthClient.self)
+        XCTAssertVertexExists(carpenter, type: Keychain.self)
+        XCTAssertVertexExists(carpenter, type: ThreeDependenciesObject.self)
 
-        XCTAssertEdgeExists(carpenter, from: "Int", to: "ApiClient")
-        XCTAssertEdgeExists(carpenter, from: "Int", to: "AuthClient")
-        XCTAssertEdgeExists(carpenter, from: "Int", to: "Keychain")
-        XCTAssertEdgeExists(carpenter, from: "Int", to: "ThreeDependenciesObject")
-        XCTAssertEdgeExists(carpenter, from: "Session", to: "ApiClient")
-        XCTAssertEdgeExists(carpenter, from: "AuthClient", to: "ApiClient")
-        XCTAssertEdgeExists(carpenter, from: "Keychain", to: "AuthClient")
-        XCTAssertEdgeExists(carpenter, from: "ApiClient", to: "ThreeDependenciesObject")
-        XCTAssertEdgeExists(carpenter, from: "AuthClient", to: "ThreeDependenciesObject")
+        XCTAssertEdgeExists(carpenter, from: Int.self, to: ApiClient.self)
+        XCTAssertEdgeExists(carpenter, from: Int.self, to: AuthClient.self)
+        XCTAssertEdgeExists(carpenter, from: Int.self, to: Keychain.self)
+        XCTAssertEdgeExists(carpenter, from: Int.self, to: ThreeDependenciesObject.self)
+        XCTAssertEdgeExists(carpenter, from: Session.self, to: ApiClient.self)
+        XCTAssertEdgeExists(carpenter, from: AuthClient.self, to: ApiClient.self)
+        XCTAssertEdgeExists(carpenter, from: Keychain.self, to: AuthClient.self)
+        XCTAssertEdgeExists(carpenter, from: ApiClient.self, to: ThreeDependenciesObject.self)
+        XCTAssertEdgeExists(carpenter, from: AuthClient.self, to: ThreeDependenciesObject.self)
 
         XCTAssertEqual(carpenter.dependencyGraph.vertexCount, 6)
         XCTAssertEqual(carpenter.dependencyGraph.edgeCount, 9)
@@ -269,22 +272,22 @@ final class CarpenterTests: XCTestCase {
 
         try carpenter.finalizeGraph()
 
-        XCTAssertVertexExists(carpenter, name: "Int")
-        XCTAssertVertexExists(carpenter, name: "ApiClient")
-        XCTAssertVertexExists(carpenter, name: "Session")
-        XCTAssertVertexExists(carpenter, name: "AuthClient")
-        XCTAssertVertexExists(carpenter, name: "Keychain")
-        XCTAssertVertexExists(carpenter, name: "ThreeDependenciesObject")
+        XCTAssertVertexExists(carpenter, type: Int.self)
+        XCTAssertVertexExists(carpenter, type: ApiClient.self)
+        XCTAssertVertexExists(carpenter, type: Session.self)
+        XCTAssertVertexExists(carpenter, type: AuthClient.self)
+        XCTAssertVertexExists(carpenter, type: Keychain.self)
+        XCTAssertVertexExists(carpenter, type: ThreeDependenciesObject.self)
 
-        XCTAssertEdgeExists(carpenter, from: "Int", to: "ApiClient")
-        XCTAssertEdgeExists(carpenter, from: "Int", to: "AuthClient")
-        XCTAssertEdgeExists(carpenter, from: "Int", to: "Keychain")
-        XCTAssertEdgeExists(carpenter, from: "Int", to: "ThreeDependenciesObject")
-        XCTAssertEdgeExists(carpenter, from: "Session", to: "ApiClient")
-        XCTAssertEdgeExists(carpenter, from: "AuthClient", to: "ApiClient")
-        XCTAssertEdgeExists(carpenter, from: "Keychain", to: "AuthClient")
-        XCTAssertEdgeExists(carpenter, from: "ApiClient", to: "ThreeDependenciesObject")
-        XCTAssertEdgeExists(carpenter, from: "AuthClient", to: "ThreeDependenciesObject")
+        XCTAssertEdgeExists(carpenter, from: Int.self, to: ApiClient.self)
+        XCTAssertEdgeExists(carpenter, from: Int.self, to: AuthClient.self)
+        XCTAssertEdgeExists(carpenter, from: Int.self, to: Keychain.self)
+        XCTAssertEdgeExists(carpenter, from: Int.self, to: ThreeDependenciesObject.self)
+        XCTAssertEdgeExists(carpenter, from: Session.self, to: ApiClient.self)
+        XCTAssertEdgeExists(carpenter, from: AuthClient.self, to: ApiClient.self)
+        XCTAssertEdgeExists(carpenter, from: Keychain.self, to: AuthClient.self)
+        XCTAssertEdgeExists(carpenter, from: ApiClient.self, to: ThreeDependenciesObject.self)
+        XCTAssertEdgeExists(carpenter, from: AuthClient.self, to: ThreeDependenciesObject.self)
 
         XCTAssertEqual(carpenter.dependencyGraph.vertexCount, 6)
         XCTAssertEqual(carpenter.dependencyGraph.edgeCount, 9)
@@ -301,12 +304,12 @@ final class CarpenterTests: XCTestCase {
 
         try carpenter.finalizeGraph()
 
-        XCTAssertVertexExists(carpenter, name: "Array<Int>")
-        XCTAssertVertexExists(carpenter, name: "Dictionary<String, Int>")
-        XCTAssertVertexExists(carpenter, name: "TestGeneric<Array<Int>, Dictionary<String, Int>>")
+        XCTAssertVertexExists(carpenter, type: Array<Int>.self)
+        XCTAssertVertexExists(carpenter, type: Dictionary<String, Int>.self)
+        XCTAssertVertexExists(carpenter, type: Dependency.TestGeneric<Array<Int>, Dictionary<String, Int>>.self)
 
-        XCTAssertEdgeExists(carpenter, from: "Array<Int>", to: "TestGeneric<Array<Int>, Dictionary<String, Int>>")
-        XCTAssertEdgeExists(carpenter, from: "Dictionary<String, Int>", to: "TestGeneric<Array<Int>, Dictionary<String, Int>>")
+        XCTAssertEdgeExists(carpenter, from: Array<Int>.self, to: Dependency.TestGeneric<Array<Int>, Dictionary<String, Int>>.self)
+        XCTAssertEdgeExists(carpenter, from: Dictionary<String, Int>.self, to: Dependency.TestGeneric<Array<Int>, Dictionary<String, Int>>.self)
 
         XCTAssertEqual(carpenter.dependencyGraph.vertexCount, 3)
         XCTAssertEqual(carpenter.dependencyGraph.edgeCount, 2)
@@ -486,7 +489,7 @@ final class CarpenterTests: XCTestCase {
 
         try await XCTAssertThrowsAsync(try carpenter.build()) { error in
             let carpenterError = try XCTUnwrap(error as? CarpenterError)
-            XCTAssertEqual(carpenterError, .factoryBuilderHasTooManyArguments(name: "SixteenDependenciesObject", count: 16))
+            XCTAssertEqual(carpenterError, .factoryBuilderHasTooManyArguments(name: .init(SixteenDependenciesObject.self), count: 16))
         }
     }
 
@@ -495,15 +498,21 @@ final class CarpenterTests: XCTestCase {
 
         try carpenter.add(Dependency.i)
         try carpenter.add(Dependency.keychain)
+        try carpenter.add(Dependency.keychainLateInit) // This doesn't run because the system thinks the requirement array is empty. Fix carpenter.add(_ factory:) !
         try carpenter.add(Dependency.authClient)
+        try carpenter.add(Dependency.authLateInit)
         try carpenter.add(Dependency.urlSession)
-        try carpenter.add(Factory(ApiClient.init) { (x: inout ApiClient, k: SixDependenciesObject) in
+        try carpenter.add(Factory(ApiClient.init))
+        try carpenter.add(LateInit { (x: inout ApiClient, k: SixDependenciesObject) in
             x.i = k.i * 3
          })
+
         try carpenter.add(Dependency.threeDependenciesObject)
         try carpenter.add(Dependency.fourDependenciesObject)
         try carpenter.add(Dependency.fiveDependenciesObject)
+        try carpenter.add(Dependency.fiveDependenciesObjectLateInit)
         try carpenter.add(Dependency.sixDependenciesObject)
+        try carpenter.add(Dependency.sixDependenciesObjectLateInit)
 
         try carpenter.build()
 
@@ -532,7 +541,7 @@ final class CarpenterTests: XCTestCase {
         ) { error in
             let carpenterError = try XCTUnwrap(error as? CarpenterError)
             XCTAssertEqual(carpenterError, .dependencyCyclesDetected(cycles: [
-                ["CycleA", "CycleC", "CycleB", "CycleA"]
+                [.init(CycleA.self), .init(CycleC.self), .init(CycleB.self), .init(CycleA.self)]
             ]))
         }
     }
@@ -542,16 +551,19 @@ final class CarpenterTests: XCTestCase {
 
         try carpenter.add(Dependency.i)
         try carpenter.add(Dependency.urlSession)
-        try carpenter.add(Factory(AuthClient.init) { (_, _: Keychain) in })
-        try carpenter.add(Factory(Keychain.init) { (_, _: ApiClient) in })
-        try carpenter.add(Factory(ApiClient.init)  { (_, _: AuthClient) in })
+        try carpenter.add(Factory(AuthClient.init))
+        try carpenter.add(Dependency.keychain)
+        try carpenter.add(Dependency.apiClient)
+        try carpenter.add(LateInit { (_: AuthClient, _: Keychain) in })
+        try carpenter.add(LateInit { (_: Keychain, _: ApiClient) in })
+        try carpenter.add(LateInit { (_: ApiClient, _: AuthClient) in })
 
         try await XCTAssertThrowsAsync(
             try carpenter.build()
         ) { error in
             let carpenterError = try XCTUnwrap(error as? CarpenterError)
             XCTAssertEqual(carpenterError, .lateInitCyclesDetected(cycles: [
-                ["AuthClient", "ApiClient", "Keychain", "AuthClient"]
+                [.init(AuthClient.self), .init(ApiClient.self), .init(Keychain.self), .init(AuthClient.self)]
             ]))
         }
     }
@@ -565,7 +577,7 @@ final class CarpenterTests: XCTestCase {
             try carpenter.add(Dependency.keychain)
         ) { error in
             let carpenterError = try XCTUnwrap(error as? CarpenterError)
-            XCTAssertEqual(carpenterError, .factoryAlreadyAdded(name: "Keychain"))
+            XCTAssertEqual(carpenterError, .factoryAlreadyAdded(name: .init(Keychain.self)))
         }
     }
 
@@ -628,6 +640,7 @@ final class CarpenterTests: XCTestCase {
     }
 }
 
+@available(macOS 14.0.0, *)
 extension Dependency {
     public static func startupTask1(exp: XCTestExpectation) -> StartupTask<ApiClient, Void> {
         StartupTask("Task 1") { (x: ApiClient) in
@@ -667,26 +680,55 @@ public func XCTAssertThrowsAsync<T>(
     }
 }
 
+
+public func XCTAssertVertexExists<T>(
+    _ carpenter: Carpenter,
+    type: T.Type = T.self,
+    file: StaticString = #filePath,
+    line: UInt = #line
+) {
+    XCTAssert(carpenter.dependencyGraph.contains(.init(type)), "Cannot find vertex \"\(type)\"", file: file, line: line)
+}
+
+
 public func XCTAssertVertexExists(
     _ carpenter: Carpenter,
     name: String,
     file: StaticString = #filePath,
     line: UInt = #line
 ) {
-    XCTAssert(carpenter.dependencyGraph.contains(name), "Cannot find vertex \"\(name)\"", file: file, line: line)
+    XCTAssert(carpenter.dependencyGraph.contains(AnyDependencyKey(name)), "Cannot find vertex \"\(name)\"", file: file, line: line)
 }
 
-public func XCTAssertEdgeExists(
+
+public func XCTAssertEdgeExists<T, U>(
     _ carpenter: Carpenter,
-    from: String,
+    from: T.Type = T.self,
+    to: U.Type = U.self,
+    file: StaticString = #filePath,
+    line: UInt = #line
+) {
+    XCTAssertTrue(
+        carpenter.dependencyGraph.edgeExists(
+            from: .init(from),
+            to: .init(to)),
+        "Cannot find edge from \"\(from)\" to \"\(to)\"",
+        file: file,
+        line: line)
+}
+
+
+public func XCTAssertEdgeExists<T>(
+    _ carpenter: Carpenter,
+    from: T.Type = T.self,
     to: String,
     file: StaticString = #filePath,
     line: UInt = #line
 ) {
     XCTAssertTrue(
         carpenter.dependencyGraph.edgeExists(
-            from: from,
-            to: to),
+            from: .init(from),
+            to: .init(to)),
         "Cannot find edge from \"\(from)\" to \"\(to)\"",
         file: file,
         line: line)

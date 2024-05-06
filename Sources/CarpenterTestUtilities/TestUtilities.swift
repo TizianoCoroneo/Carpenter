@@ -4,25 +4,30 @@ import class Foundation.Bundle
 
 // MARK: - Factories
 
+@available(macOS 14.0.0, *)
 public enum Dependency {
 
     public static var i = Factory { 0 }
 
-    public static var keychain = Factory(Keychain.init) { (x: inout Keychain) in
+    public static var keychain = Factory(Keychain.init)
+    public static var keychainLateInit = LateInit { (x: inout Keychain) in
         x.i = 10
     }
 
-    public static var authClient = Factory(AuthClient.init) { (x: inout AuthClient, k: Keychain) in
+    public static var authClient = Factory(AuthClient.init) 
+    public static var authLateInit = LateInit { (x: inout AuthClient, k: Keychain) in
         x.i = k.i * 2
     }
     public static var urlSession = Factory { Session.shared }
     public static var apiClient = Factory(ApiClient.init)
     public static var threeDependenciesObject = Factory(ThreeDependenciesObject.init)
     public static var fourDependenciesObject = Factory(FourDependenciesObject.init)
-    public static var fiveDependenciesObject = Factory(FiveDependenciesObject.init) { (x: inout FiveDependenciesObject, k: Keychain) in
+    public static var fiveDependenciesObject = Factory(FiveDependenciesObject.init) 
+    public static var fiveDependenciesObjectLateInit = LateInit { (x: inout FiveDependenciesObject, k: Keychain) in
         x.i = k.i * 4
     }
-    public static var sixDependenciesObject = Factory(SixDependenciesObject.init) { (x: inout SixDependenciesObject) in
+    public static var sixDependenciesObject = Factory(SixDependenciesObject.init)
+    public static var sixDependenciesObjectLateInit = LateInit { (x: inout SixDependenciesObject) in
         x.i = 7
     }
     public static var sixteenDependenciesObject = Factory(SixteenDependenciesObject.init)

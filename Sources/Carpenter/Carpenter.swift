@@ -1,30 +1,100 @@
 import SwiftGraph
 
-public struct DependencyKey<Product> {
-    let name: String
+public enum DependencyKey<Product>: CustomStringConvertible, Hashable {
+    case objectIdentifier(ObjectIdentifier)
+    case name(String)
 
-    init(name: String) {
-        self.name = name
+    private init(_ name: ObjectIdentifier) {
+        self = .objectIdentifier(name)
     }
 
-    public init() {
-        self.init(name: String(describing: Product.self))
+    public init(_ name: String) {
+        self = .name(name)
+    }
+
+    public init(_ type: Product.Type = Product.self) {
+        self.init(ObjectIdentifier(type))
+    }
+
+    public var description: String {
+        switch self {
+        case .objectIdentifier:
+            return String(describing: Product.self)
+        case .name(let string):
+            return string
+        }
+    }
+
+    func eraseToAnyDependencyKey() -> AnyDependencyKey {
+        switch self {
+        case .objectIdentifier(let objectIdentifier):
+            .init(
+                key: .objectIdentifier(objectIdentifier),
+                displayName: { String(describing: Product.self) })
+        case .name(let string):
+            .init(
+                key: .name(string),
+                displayName: { String(describing: Product.self) })
+        }
     }
 }
+
+public struct AnyDependencyKey: Hashable, CustomStringConvertible {
+    enum Key: Hashable {
+        case objectIdentifier(ObjectIdentifier)
+        case name(String)
+    }
+
+    let key: Key
+    let displayName: () -> String
+
+    init(key: Key, displayName: @escaping () -> String) {
+        self.key = key
+        self.displayName = displayName
+    }
+
+    init(_ objectIdentifier: ObjectIdentifier) {
+        self.init(
+            key: Key.objectIdentifier(objectIdentifier),
+            displayName: { String(describing: objectIdentifier) })
+    }
+
+    init(_ name: String) {
+        self.init(key: .name(name), displayName: { name })
+    }
+
+    init<T>(_ type: T.Type = T.self) {
+        self.init(
+            key: Key.objectIdentifier(ObjectIdentifier(T.self)),
+            displayName: { String(describing: T.self) })
+    }
+
+    init(metatype: Any.Type) {
+        self.init(
+            key: Key.objectIdentifier(ObjectIdentifier(metatype)),
+            displayName: { String(describing: metatype) })
+    }
+
+    public static func ==(_ l: AnyDependencyKey, _ r: AnyDependencyKey) -> Bool { l.key == r.key }
+    public func hash(into hasher: inout Hasher) { hasher.combine(key) }
+    public var description: String { displayName() }
+}
+
+public typealias Vertex = AnyDependencyKey
 
 public struct Carpenter {
 
     public static var shared: Carpenter = .init()
 
-    public typealias Vertex = String
     private typealias E = CarpenterError
 
-    public private(set) var dependencyGraph: UnweightedGraph<Vertex> = .init()
-    public private(set) var lateInitDependencyGraph: UnweightedGraph<Vertex> = .init()
-    private(set) var factoryRegistry: [Vertex: AnyFactory] = [:]
-    private var builtProductsRegistry: [Vertex: Any] = [:]
-    private var requirementsByResultName: [Vertex: [Vertex]] = [:]
-    private var lateRequirementsByResultName: [Vertex: [Vertex]] = [:]
+    public private(set) var dependencyGraph: UnweightedGraph<AnyDependencyKey> = .init()
+    public private(set) var lateInitDependencyGraph: UnweightedGraph<AnyDependencyKey> = .init()
+    private(set) var factoryRegistry: [AnyDependencyKey: AnyFactory] = [:]
+    private(set) var lateFactoryRegistry: [AnyDependencyKey: AnyFactory] = [:]
+    private var builtProductsRegistry: [AnyDependencyKey: Any] = [:]
+    private var requirementsByResultName: [AnyDependencyKey: [AnyDependencyKey]] = [:]
+    private var lateRequirementsByResultName: [AnyDependencyKey: [AnyDependencyKey]] = [:]
     private var didBuildInitialGraph = false
 
     // MARK: - Public
@@ -74,19 +144,20 @@ public struct Carpenter {
     public func get<Product>(
         _ dependencyKey: DependencyKey<Product>
     ) throws -> Product {
-        let name = dependencyKey.name
+        let name = dependencyKey.eraseToAnyDependencyKey()
 
         guard let result = self.builtProductsRegistry[name]
         else { throw E.productNotFound(name: name) }
 
         guard let typedResult = result as? Product
-        else { throw E.productHasMismatchingType(name: name, type: String(describing: type(of: result))) }
+        else { throw E.productHasMismatchingType(name: name, type: Vertex(metatype: type(of: result))) }
 
         return typedResult
     }
 
-    public func get<Requirements, LateRequirements, Product>(
-        _ factory: Factory<Requirements, LateRequirements, Product>
+    @available(macOS 14.0.0, *)
+    public func get<each Requirements, Product>(
+        _ factory: Factory<repeat each Requirements, Product>
     ) throws -> Product {
         try self.get(DependencyKey<Product>())
     }
@@ -96,28 +167,34 @@ public struct Carpenter {
     mutating func add(
         _ factory: AnyFactory
     ) throws {
-        guard !requirementsByResultName.keys.contains(factory.productName)
-        else { throw E.factoryAlreadyAdded(name: factory.productName) }
+        switch factory.builder {
+        case .early:
+            guard !requirementsByResultName.keys.contains(factory.productName)
+            else { throw E.factoryAlreadyAdded(name: factory.productName) }
 
-        guard !lateRequirementsByResultName.keys.contains(factory.productName)
-        else { throw E.factoryAlreadyAdded(name: factory.productName) }
+            requirementsByResultName[factory.productName] = factory.requirementName
+            _ = dependencyGraph.addVertex(factory.productName)
+            factoryRegistry[factory.productName] = factory
 
-        requirementsByResultName[factory.productName] = splitTupleContent(factory.requirementName)
-        lateRequirementsByResultName[factory.productName] = splitTupleContent(factory.lateRequirementName)
+        case .late:
+            guard requirementsByResultName.keys.contains(factory.productName)
+            else { throw E.cannotAddLateInitWithoutFactory(name: factory.productName) }
+            guard !lateRequirementsByResultName.keys.contains(factory.productName)
+            else { throw E.factoryAlreadyAdded(name: factory.productName) }
 
-        _ = dependencyGraph.addVertex(factory.productName)
-        _ = lateInitDependencyGraph.addVertex(factory.productName)
-
-        factoryRegistry[factory.productName] = factory
+            lateRequirementsByResultName[factory.productName] = factory.requirementName
+            _ = lateInitDependencyGraph.addVertex(factory.productName)
+            lateFactoryRegistry[factory.productName] = factory
+        }
     }
 
     private func build(
-        _ vertex: String
+        _ vertex: Vertex
     ) throws -> Any {
         guard let requirements = requirementsByResultName[vertex]
         else { throw E.cannotRetrieveRequirementsForProduct(name: vertex) }
 
-        guard let factory = factoryRegistry[vertex]?.builder
+        guard case .early(let factory) = factoryRegistry[vertex]?.builder
         else { throw E.cannotRetrieveFactoryBuilder(name: vertex) }
 
         let result: Any
@@ -429,14 +506,14 @@ public struct Carpenter {
         }
     }
 
-    private func lateInitialize(_ vertex: String) throws -> Any {
+    private func lateInitialize(_ vertex: Vertex) throws -> Any {
         guard var product = builtProductsRegistry[vertex]
         else { throw E.builtProductNotFoundForVertex(name: vertex) }
 
         guard let requirements = lateRequirementsByResultName[vertex]
         else { throw E.cannotRetrieveLateRequirementsForProduct(name: vertex) }
 
-        guard let setup = factoryRegistry[vertex]?.lateInit
+        guard case .late(let setup) = lateFactoryRegistry[vertex]?.builder
         else { throw E.cannotRetrieveFactoryLateInitialization(name: vertex) }
 
         // TODO: Apply variadic generics once available
@@ -747,11 +824,11 @@ public struct Carpenter {
 
         for (productName, requirementsNames) in requirementsByResultName {
             guard let productIndex = dependencyGraph.indexOfVertex(productName)
-            else { throw E.productNotFound(name: String(productName)) }
+            else { throw E.productNotFound(name: productName) }
 
             for requirement in requirementsNames {
                 guard let requirementIndex = dependencyGraph.indexOfVertex(requirement)
-                else { throw E.requirementNotFound(name: String(requirement), requestedBy: productName) }
+                else { throw E.requirementNotFound(name: requirement, requestedBy: productName) }
 
                 dependencyGraph.addEdge(
                     UnweightedEdge(u: requirementIndex, v: productIndex, directed: true),
@@ -761,11 +838,11 @@ public struct Carpenter {
 
         for (productName, requirementsNames) in lateRequirementsByResultName {
             guard let productIndex = lateInitDependencyGraph.indexOfVertex(productName)
-            else { throw E.productNotFoundForLateInitialization(name: String(productName)) }
+            else { throw E.productNotFoundForLateInitialization(name: productName) }
 
             for requirement in requirementsNames {
                 guard let requirementIndex = lateInitDependencyGraph.indexOfVertex(requirement)
-                else { throw E.requirementNotFoundForLateInitialization(name: String(requirement), requestedBy: productName) }
+                else { throw E.requirementNotFoundForLateInitialization(name: requirement, requestedBy: productName) }
 
                 lateInitDependencyGraph.addEdge(
                     UnweightedEdge(u: requirementIndex, v: productIndex, directed: true),

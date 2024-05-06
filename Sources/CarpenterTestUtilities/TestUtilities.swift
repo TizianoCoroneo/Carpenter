@@ -1,6 +1,6 @@
 
 import Carpenter
-import XCTest
+import class Foundation.Bundle
 
 // MARK: - Factories
 
@@ -55,27 +55,6 @@ public enum Dependency {
     public struct TestGeneric<A, B> {
         let a: A
         let b: B
-    }
-
-    public static func startupTask1(exp: XCTestExpectation) -> StartupTask<ApiClient, Void> {
-        StartupTask("Task 1") { (x: ApiClient) in
-            exp.fulfill()
-            print("Ran task 1")
-        }
-    }
-
-    public static func startupTask2(exp: XCTestExpectation) -> StartupTask<Session, Void> {
-        StartupTask("Task 2") { (x: Session) in
-            exp.fulfill()
-            print("Ran task 2")
-        }
-    }
-
-    public static func startupTask3(exp: XCTestExpectation) -> StartupTask<AuthClient, Void> {
-        StartupTask("Task 3") { (x: AuthClient) in
-            exp.fulfill()
-            print("Ran task 3")
-        }
     }
 }
 
@@ -278,50 +257,6 @@ public class CycleC {
     }
 }
 
-// MARK: - Files
-
 public extension Bundle {
     static let visualizationBundleURL = Bundle.module.url(forResource: "VisualizationBundle", withExtension: "json")!
 }
-
-// MARK: - Assertions
-
-public func XCTAssertThrowsAsync<T>(
-    _ expression: @autoclosure @escaping () async throws -> T,
-    errorHandler: (Error) async throws -> Void,
-    file: StaticString = #file,
-    line: UInt = #line
-) async throws {
-    do {
-        _ = try await expression()
-        XCTFail("Should have thrown an error", file: file, line: line)
-    } catch {
-        try await errorHandler(error)
-    }
-}
-
-public func XCTAssertVertexExists(
-    _ carpenter: Carpenter,
-    name: String,
-    file: StaticString = #filePath,
-    line: UInt = #line
-) {
-    XCTAssert(carpenter.dependencyGraph.contains(name), "Cannot find vertex \"\(name)\"", file: file, line: line)
-}
-
-public func XCTAssertEdgeExists(
-    _ carpenter: Carpenter,
-    from: String,
-    to: String,
-    file: StaticString = #filePath,
-    line: UInt = #line
-) {
-    XCTAssertTrue(
-        carpenter.dependencyGraph.edgeExists(
-            from: from,
-            to: to),
-        "Cannot find edge from \"\(from)\" to \"\(to)\"",
-        file: file,
-        line: line)
-}
-

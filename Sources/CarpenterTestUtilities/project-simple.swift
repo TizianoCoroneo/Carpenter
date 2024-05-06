@@ -1,5 +1,8 @@
 
-public class Mock_12 { 
+@_optimize(none)
+public func blackHole(_ value: Any) {}
+
+public class Mock_12 {
     let mock_13: Mock_13
     let mock_14: Mock_14
     let mock_15: Mock_15

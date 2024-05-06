@@ -5,6 +5,8 @@ import os.log
 
 final class CarpenterTests: XCTestCase {
 
+    let logger = Logger(subsystem: "com.tiziano.carpenter.tests", category: "Carpenter Tests")
+
     func test_splitRequirements_simple() throws {
         let test = "ApiClient"
         let splitted = splitTupleContent(test)
@@ -577,7 +579,6 @@ final class CarpenterTests: XCTestCase {
         ], count: 10000).flatMap { $0 }
 
         let tupleStrings = tuples.map { String(describing: $0) }
-        print(tupleStrings)
 
         self.measure {
             for tupleString in tupleStrings {
@@ -586,8 +587,26 @@ final class CarpenterTests: XCTestCase {
         }
     }
 
-    func test_BenchmarkLargeProject() throws {
-        let logger = Logger.init(subsystem: "com.measure-tests", category: "Measuring tests")
+    func test_ProfileLargeProject() throws {
+        let signposter = OSSignposter(logger: logger)
+
+        for _ in 0..<30 {
+            let id = signposter.makeSignpostID()
+            signposter.withIntervalSignpost("Running Carpenter", id: id) {
+                let generatedByCarpenter = GeneratedByCarpenter()
+
+                let c = signposter.withIntervalSignpost("Creating container", id: id) {
+                    generatedByCarpenter.makeContainer()
+                }
+
+                signposter.withIntervalSignpost("Accessing container") {
+                    generatedByCarpenter.accessAllInContainer(c)
+                }
+            }
+        }
+    }
+
+    func test_BenchmarkLargeProjectInXcode() throws {
         let signposter = OSSignposter(logger: logger)
 
         self.measure {
@@ -595,14 +614,80 @@ final class CarpenterTests: XCTestCase {
                 let id = signposter.makeSignpostID()
                 signposter.withIntervalSignpost("Running Carpenter", id: id) {
                     let generatedByCarpenter = GeneratedByCarpenter()
-                    let c = generatedByCarpenter.makeContainer()
-                    signposter.emitEvent("Accessing container", id: id)
-                    generatedByCarpenter.accessAllInContainer(c)
+
+                    let c = signposter.withIntervalSignpost("Creating container", id: id) {
+                        generatedByCarpenter.makeContainer()
+                    }
+
+                    signposter.withIntervalSignpost("Accessing container") {
+                        generatedByCarpenter.accessAllInContainer(c)
+                    }
                 }
             }
         }
     }
 }
 
-@_optimize(none)
-func blackHole(_ value: Any) {}
+extension Dependency {
+    public static func startupTask1(exp: XCTestExpectation) -> StartupTask<ApiClient, Void> {
+        StartupTask("Task 1") { (x: ApiClient) in
+            exp.fulfill()
+            print("Ran task 1")
+        }
+    }
+
+    public static func startupTask2(exp: XCTestExpectation) -> StartupTask<Session, Void> {
+        StartupTask("Task 2") { (x: Session) in
+            exp.fulfill()
+            print("Ran task 2")
+        }
+    }
+
+    public static func startupTask3(exp: XCTestExpectation) -> StartupTask<AuthClient, Void> {
+        StartupTask("Task 3") { (x: AuthClient) in
+            exp.fulfill()
+            print("Ran task 3")
+        }
+    }
+}
+
+// MARK: - Assertions
+
+public func XCTAssertThrowsAsync<T>(
+    _ expression: @autoclosure @escaping () async throws -> T,
+    errorHandler: (Error) async throws -> Void,
+    file: StaticString = #file,
+    line: UInt = #line
+) async throws {
+    do {
+        _ = try await expression()
+        XCTFail("Should have thrown an error", file: file, line: line)
+    } catch {
+        try await errorHandler(error)
+    }
+}
+
+public func XCTAssertVertexExists(
+    _ carpenter: Carpenter,
+    name: String,
+    file: StaticString = #filePath,
+    line: UInt = #line
+) {
+    XCTAssert(carpenter.dependencyGraph.contains(name), "Cannot find vertex \"\(name)\"", file: file, line: line)
+}
+
+public func XCTAssertEdgeExists(
+    _ carpenter: Carpenter,
+    from: String,
+    to: String,
+    file: StaticString = #filePath,
+    line: UInt = #line
+) {
+    XCTAssertTrue(
+        carpenter.dependencyGraph.edgeExists(
+            from: from,
+            to: to),
+        "Cannot find edge from \"\(from)\" to \"\(to)\"",
+        file: file,
+        line: line)
+}

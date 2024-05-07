@@ -34,7 +34,7 @@ let package = Package(
                 "SwiftGraph"
             ]
             , swiftSettings: [
-                .unsafeFlags(["-no-whole-module-optimization"]) // Without this flag we crash the 5.10 compiler
+//                .unsafeFlags(["-no-whole-module-optimization"]) // Without this flag we crash the 5.10 compiler
             ]
         ),
 

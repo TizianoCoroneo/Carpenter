@@ -1,5 +1,293 @@
 import SwiftGraph
 
+/// A ``Factory`` describes how to create a value of type `Product` using a value of type `Requirement`, and how to set additional
+/// properties on the `Product` value after intialization, using a value of type `LateRequirement`.
+///
+/// The initializer ``init(_ builder:)`` describes how to create a value of type `Product` from a value of `Requirement`.
+///
+///```swift
+///let urlSessionFactory = Factory { URLSession.shared }
+///// has type Factory<Void, Void, URLSession>
+///
+///let counterFactory = Factory { (x: Int) in Counter(count: x) }
+///// has type Factory<Int, Void, Counter>
+///
+///let userFactory = Factory { (id: UUID, name: String) in
+///    User(id: id, name: name)
+///} lateInit: { (user: inout User, email: EmailAddress) in
+///    user.email = email
+///}
+///// has type Factory<(UUID, String), EmailAddress, Counter>
+///```
+
+@available(iOS 17, macOS 14, *)
+public struct Factory<each Requirement, Product>: FactoryConvertible {
+
+    var builder: (repeat each Requirement) throws -> Product
+    let requirementName: ContiguousArray<AnyDependencyKey>
+    let productName: AnyDependencyKey
+
+    public init(
+        _ builder: @escaping (repeat each Requirement) throws -> Product
+    ) {
+        self.builder = builder
+        self.requirementName = collectIdentifiers(for: repeat (each Requirement).self)
+        self.productName = AnyDependencyKey(metatype: Product.self)
+    }
+
+    public func eraseToAnyFactory() -> [AnyFactory] {
+        [
+            AnyFactory(
+                key: productName,
+                requirementName: requirementName,
+                kind: .objectFactory,
+                builder: .early {
+                    var count = 0
+
+                    let requirement = try (
+                        repeat cast(
+                            $0,
+                            to: (each Requirement).self,
+                            index: &count,
+                            requirementName: requirementName
+                        )
+                    )
+
+                    return try self.builder(repeat each requirement)
+                })
+        ]
+    }
+}
+
+@available(iOS 17, macOS 14, *)
+public struct LateInit<each LateRequirement, Product>: FactoryConvertible {
+    var lateInit: (inout Product, repeat each LateRequirement) throws -> Void
+    let requirementName: ContiguousArray<AnyDependencyKey>
+    let productName: AnyDependencyKey
+
+    public init(
+        lateInit: @escaping (inout Product, repeat each LateRequirement) throws -> Void
+    ) {
+        self.lateInit = lateInit
+        self.requirementName = collectIdentifiers(for: repeat (each LateRequirement).self)
+        self.productName = AnyDependencyKey(metatype: Product.self)
+    }
+
+    public func eraseToAnyFactory() -> [AnyFactory] {
+        [
+            AnyFactory(
+                key: productName,
+                requirementName: requirementName,
+                kind: .objectFactory,
+                builder: .late {
+                    guard var product = $0 as? Product
+                    else {
+                        throw CarpenterError.productHasMismatchingType(
+                            name: productName,
+                            type: .init(metatype: type(of: $0)))
+                    }
+
+                    var count = 0
+                    func cast<R>(_ value: [Any], to r: R.Type = R.self) throws -> R {
+                        defer { count += 1 }
+                        guard let castValue = value[count] as? R else {
+                            throw CarpenterError.lateRequirementHasMismatchingType(
+                                resultName: productName,
+                                expected: requirementName,
+                                type: .init(metatype: type(of: value[count])))
+                        }
+                        return castValue
+                    }
+
+                    let requirement = try (repeat cast($1, to: (each LateRequirement).self))
+                    try self.lateInit(&product, repeat each requirement)
+                    $0 = product
+            })
+        ]
+    }
+}
+
+func collectIdentifiers<each Element>(
+    for types: repeat (each Element).Type
+) -> ContiguousArray<AnyDependencyKey> {
+    var list = ContiguousArray<AnyDependencyKey>()
+
+    func adder<T>(_ type: T.Type = T.self) {
+        list.append(AnyDependencyKey(
+            key: .objectIdentifier(ObjectIdentifier(T.self)),
+            displayName: { String(describing: T.self) }))
+    }
+
+    repeat adder(each types)
+
+    return list
+}
+
+private func cast<R>(
+    _ value: [Any],
+    to r: R.Type = R.self,
+    index: inout Int,
+    requirementName: ContiguousArray<Vertex>
+) throws -> R {
+    defer { index += 1 }
+    guard let castValue = value[index] as? R else {
+        throw CarpenterError.requirementHasMismatchingType(
+            resultName: .init(metatype: R.self),
+            expected: requirementName,
+            type: .init(metatype: type(of: value[index])))
+    }
+    return castValue
+}
+
+public protocol FactoryConvertible {
+    func eraseToAnyFactory() -> [AnyFactory]
+}
+
+public struct AnyFactory {
+    public enum Kind: Codable {
+        case objectFactory
+        case startupTask
+        case protocolFactory
+    }
+
+    public enum Builder {
+        case early(([Any]) throws -> Any)
+        case late((inout Any, [Any]) throws -> Void)
+    }
+
+    public init(
+        key: AnyDependencyKey,
+        requirementName: ContiguousArray<AnyDependencyKey>,
+        kind: Kind,
+        builder: Builder
+    ) {
+        self.requirementName = requirementName
+        self.productName = key
+        self.kind = kind
+        self.builder = builder
+    }
+
+    let requirementName: ContiguousArray<AnyDependencyKey>
+    let productName: AnyDependencyKey
+    let kind: Kind
+    let builder: Builder
+}
+
+
+@propertyWrapper public struct GetDependency<P> {
+    public var wrappedValue: P {
+        try! tryGet()
+    }
+
+    public func tryGet() throws -> P {
+        try carpenter().get(key)
+    }
+
+    let carpenter: () -> Carpenter
+    let key: DependencyKey<P>
+
+    @available(iOS 17, macOS 14, *)
+    public init<Container: DependencyContainer, each Requirement>(
+        carpenter: @autoclosure @escaping () -> Carpenter = .shared,
+        _ keyPath: KeyPath<Container, Factory<repeat each Requirement, P>>
+    ) {
+        self.carpenter = carpenter
+        self.key = DependencyKey<P>()
+    }
+
+    @available(iOS 17, macOS 14, *)
+    public init<Container: DependencyContainer, C>(
+        carpenter: @autoclosure @escaping () -> Carpenter = .shared,
+        _ keyPath: KeyPath<Container, ProtocolWrapper<C, P>>
+    ) {
+        self.carpenter = carpenter
+        self.key = DependencyKey<P>()
+    }
+
+    public init<Container: DependencyContainer>(
+        carpenter: @autoclosure @escaping () -> Carpenter = .shared,
+        _ keyPath: KeyPath<Container, DependencyKey<P>>
+    ) {
+        self.carpenter = carpenter
+        self.key = Container.shared[keyPath: keyPath]
+    }
+}
+
+
+@available(iOS 17, macOS 14, *)
+public struct ProtocolWrapper<ConcreteType, ProtocolType>: FactoryConvertible {
+    let concreteKey: AnyDependencyKey
+    let protocolKey: AnyDependencyKey
+
+    let cast: (ConcreteType) -> ProtocolType
+
+    public init(
+        cast: @escaping (ConcreteType) -> ProtocolType
+    ) {
+        self.concreteKey = AnyDependencyKey(metatype: ConcreteType.self)
+        self.protocolKey = AnyDependencyKey(metatype: ProtocolType.self)
+        self.cast = cast
+    }
+
+    public func eraseToAnyFactory() -> [AnyFactory] {
+        [AnyFactory(
+            key: protocolKey,
+            requirementName: [concreteKey],
+            kind: .protocolFactory,
+            builder: .early {
+                guard let concrete = $0[0] as? ConcreteType
+                else {
+                    throw CarpenterError.requirementHasMismatchingType(
+                        resultName: protocolKey,
+                        expected: [concreteKey],
+                        type: .init(metatype: type(of: $0)))
+                }
+
+                return self.cast(concrete)
+            })
+         ]
+    }
+}
+
+@available(iOS 17, macOS 14, *)
+public struct StartupTask<each Requirement, LateRequirement>: FactoryConvertible {
+    let key: AnyDependencyKey
+    let builder: (repeat each Requirement) throws -> Void
+    let requirementName: ContiguousArray<AnyDependencyKey>
+
+    public init(
+        _ name: String,
+        _ builder: @escaping (repeat each Requirement) throws -> Void
+    ) {
+        self.key = .init(name: name)
+        self.builder = builder
+        self.requirementName = collectIdentifiers(for: repeat (each Requirement).self)
+    }
+
+    public func eraseToAnyFactory() -> [AnyFactory] {
+        [ AnyFactory(
+            key: key,
+            requirementName: requirementName,
+            kind: .startupTask,
+            builder: .early {
+                var count = 0
+
+                let requirement = try (
+                    repeat cast(
+                        $0,
+                        to: (each Requirement).self,
+                        index: &count,
+                        requirementName: requirementName
+                    )
+                )
+
+                return try self.builder(repeat each requirement)
+            })
+        ]
+    }
+}
+
+
 public enum DependencyKey<Product>: CustomStringConvertible, Hashable {
     case objectIdentifier(ObjectIdentifier)
     case name(String)
@@ -59,7 +347,7 @@ public struct AnyDependencyKey: Hashable, CustomStringConvertible {
             displayName: { String(describing: objectIdentifier) })
     }
 
-    init(_ name: String) {
+    init(name: String) {
         self.init(key: .name(name), displayName: { name })
     }
 
@@ -290,6 +578,131 @@ public struct Carpenter {
                     UnweightedEdge(u: requirementIndex, v: productIndex, directed: true),
                     directed: true)
             }
+        }
+    }
+}
+
+@resultBuilder
+public struct FactoryBuilder {
+
+    public static func buildExpression(
+        _ value: some FactoryConvertible
+    ) -> [AnyFactory] {
+        value.eraseToAnyFactory()
+    }
+
+    public static func buildExpression(
+        _ value: AnyFactory
+    ) -> [AnyFactory] {
+        [value]
+    }
+
+    public static func buildExpression(
+        _ value: [AnyFactory]
+    ) -> [AnyFactory] {
+        value
+    }
+
+    public static func buildBlock(_ components: [AnyFactory]...) -> [AnyFactory] {
+        components.flatMap { $0 }
+    }
+
+    public static func buildArray(_ components: [[AnyFactory]]) -> [AnyFactory] {
+        components.flatMap { $0 }
+    }
+
+    public static func buildEither(first component: [AnyFactory]) -> [AnyFactory] {
+        component
+    }
+
+    public static func buildEither(second component: [AnyFactory]) -> [AnyFactory] {
+        component
+    }
+
+    public static func buildLimitedAvailability(_ component: [AnyFactory]) -> [AnyFactory] {
+        component
+    }
+}
+
+public protocol DependencyContainer {
+    static var shared: Self { get }
+
+    init()
+}
+
+public extension DependencyContainer {
+    static var allFactories: [AnyFactory] {
+        Mirror(reflecting: shared).children
+            .compactMap { $0.value as? FactoryConvertible }
+            .flatMap { $0.eraseToAnyFactory() }
+    }
+}
+
+
+public enum CarpenterError: Error, Equatable, CustomStringConvertible {
+    case requirementNotFound(name: Vertex, requestedBy: Vertex)
+    case requirementNotFoundForLateInitialization(name: Vertex, requestedBy: Vertex)
+    case requirementHasMismatchingType(resultName: Vertex, expected: ContiguousArray<Vertex>, type: Vertex)
+    case lateRequirementHasMismatchingType(resultName: Vertex, expected: ContiguousArray<Vertex>, type: Vertex)
+    case cannotRetrieveRequirementsForProduct(name: Vertex)
+    case cannotRetrieveLateRequirementsForProduct(name: Vertex)
+    case cannotRetrieveFactoryBuilder(name: Vertex)
+    case cannotRetrieveFactoryLateInitialization(name: Vertex)
+    case productNotFound(name: Vertex)
+    case productNotFoundForLateInitialization(name: Vertex)
+    case productHasMismatchingType(name: Vertex, type: Vertex)
+    case factoryAlreadyAdded(name: Vertex)
+    case cannotAddLateInitWithoutFactory(name: Vertex)
+    case builtProductNotFoundForVertex(name: Vertex)
+    case factoryBuilderHasTooManyArguments(name: Vertex, count: Int)
+    case factoryLateInitHasTooManyArguments(name: Vertex, count: Int)
+    case dependencyCyclesDetected(cycles: [[Vertex]])
+    case lateInitCyclesDetected(cycles: [[Vertex]])
+
+    public var description: String {
+        switch self {
+        case let .requirementNotFound(name, requestedBy):
+            return "Requirement \"\(name)\" not found in builder graph; requested by \(requestedBy)."
+        case let .requirementNotFoundForLateInitialization(name, requestedBy):
+            return "Requirement \"\(name)\" not found in late initialization graph; requested by \(requestedBy)."
+        case let .requirementHasMismatchingType(resultName, expected, type):
+            return "Requirement for product \"\(resultName)\" has wrong type: expected \"\(expected)\", found \"\(type)\"."
+        case let .lateRequirementHasMismatchingType(resultName, expected, type):
+            return "Late init requirement for product \"\(resultName)\" has wrong type: expected \"\(expected)\", found \"\(type)\"."
+        case let .cannotRetrieveRequirementsForProduct(name):
+            return "Cannot retrieve requirements for product \"\(name)\"."
+        case let .cannotRetrieveLateRequirementsForProduct(name):
+            return "Cannot retrieve late requirements for product \"\(name)\"."
+        case let .cannotRetrieveFactoryBuilder(name):
+            return "Cannot retrieve builder for product \"\(name)\" in builder graph."
+        case let .cannotRetrieveFactoryLateInitialization(name):
+            return "Cannot retrieve builder for product \"\(name)\" in late initialization graph."
+        case let .productNotFound(name):
+            return "Product \"\(name)\" not found in builder graph."
+        case let .productNotFoundForLateInitialization(name):
+            return "Product \"\(name)\" not found in late initialization graph."
+        case let .productHasMismatchingType(name, type):
+            return "Product \"\(name)\" has mismatching type \"\(type)\"."
+        case let .factoryAlreadyAdded(name):
+            return "Already added builder for product \"\(name)\"."
+        case let .cannotAddLateInitWithoutFactory(name):
+            return "Cannot add a `LateInit` for class: \"\(name)\" has no `Factory`."
+        case let .builtProductNotFoundForVertex(name):
+            return "Built product not found for product \"\(name)\"."
+        case let .factoryBuilderHasTooManyArguments(name, count):
+            return "Dependency builder for \"\(name)\" has too many arguments (\(count))."
+        case let .factoryLateInitHasTooManyArguments(name, count):
+            return "Dependency late initialization for \"\(name)\" has too many arguments (\(count))."
+        case let .dependencyCyclesDetected(cycles):
+            return """
+            Cycles detected in dependency graph:
+            \(cycles.map { $0.map { "\($0)" }.joined(separator: " -> ") }.joined(separator: "\n"))
+            """
+        case let .lateInitCyclesDetected(cycles):
+            return """
+            Cycles detected in late initialization graph:
+            \(cycles.map { $0.map { "\($0)" }.joined(separator: " -> ") }.joined(separator: "\n"))
+            """
         }
     }
 }

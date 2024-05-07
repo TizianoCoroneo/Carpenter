@@ -612,7 +612,7 @@ public func XCTAssertVertexExists(
     file: StaticString = #filePath,
     line: UInt = #line
 ) {
-    XCTAssert(carpenter.dependencyGraph.contains(AnyDependencyKey(name)), "Cannot find vertex \"\(name)\"", file: file, line: line)
+    XCTAssert(carpenter.dependencyGraph.contains(AnyDependencyKey(name: name)), "Cannot find vertex \"\(name)\"", file: file, line: line)
 }
 
 
@@ -643,7 +643,7 @@ public func XCTAssertEdgeExists<T>(
     XCTAssertTrue(
         carpenter.dependencyGraph.edgeExists(
             from: .init(from),
-            to: .init(to)),
+            to: .init(name: to)),
         "Cannot find edge from \"\(from)\" to \"\(to)\"",
         file: file,
         line: line)

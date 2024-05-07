@@ -110,7 +110,9 @@ func collectIdentifiers<each Element>(
     var list = ContiguousArray<AnyDependencyKey>()
 
     func adder<T>(_ type: T.Type = T.self) {
-        list.append(AnyDependencyKey.init(T.self))
+        list.append(AnyDependencyKey(
+            key: .objectIdentifier(ObjectIdentifier(T.self)),
+            displayName: { String(describing: T.self) }))
     }
 
     repeat adder(each types)

@@ -21,13 +21,13 @@
         self.key = DependencyKey<P>()
     }
 
-//    public init<Container: DependencyContainer, C>(
-//        carpenter: @autoclosure @escaping () -> Carpenter = .shared,
-//        _ keyPath: KeyPath<Container, ProtocolWrapper<C, P>>
-//    ) {
-//        self.carpenter = carpenter
-//        self.key = DependencyKey<P>()
-//    }
+    public init<Container: DependencyContainer, C>(
+        carpenter: @autoclosure @escaping () -> Carpenter = .shared,
+        _ keyPath: KeyPath<Container, ProtocolWrapper<C, P>>
+    ) {
+        self.carpenter = carpenter
+        self.key = DependencyKey<P>()
+    }
 
     public init<Container: DependencyContainer>(
         carpenter: @autoclosure @escaping () -> Carpenter = .shared,

@@ -5,8 +5,8 @@ import SwiftGraph
 
 //public extension Carpenter {
 //    struct VisualizationBundle: Codable {
-//        public let buildGraph: UnweightedGraph<Vertex>
-//        public let lateInitGraph: UnweightedGraph<Vertex>
+//        public let buildGraph: UnweightedGraph<String>
+//        public let lateInitGraph: UnweightedGraph<String>
 //        public let nodeKinds: [Vertex: AnyFactory.Kind]
 //    }
 //

@@ -17,14 +17,14 @@
 //  limitations under the License.
 
 /// An implementation of Graph with some convenience methods for adding and removing UnweightedEdges. WeightedEdges may be added to an UnweightedGraph but their weights will be ignored.
-public final class UnweightedGraph<V: Equatable>: CustomStringConvertible, Collection {
+public struct UnweightedGraph<V: Equatable>: CustomStringConvertible, Collection {
     public var vertices: [V] = [V]()
     public var edges: [[UnweightedEdge]] = [[UnweightedEdge]]() //adjacency lists
     
     public init() {
     }
     
-    required public init(vertices: [V]) {
+    public init(vertices: [V]) {
         for vertex in vertices {
             _ = self.addVertex(vertex)
         }
@@ -35,7 +35,7 @@ public final class UnweightedGraph<V: Equatable>: CustomStringConvertible, Colle
         case edges
     }
     
-    public required convenience init(from decoder: Decoder) throws where V: Decodable {
+    public init(from decoder: Decoder) throws where V: Decodable {
         let container = try decoder.container(keyedBy: Keys.self)
         let vertices = try container.decode([V].self, forKey: .vertices)
         let edges: [[UnweightedEdge]] = try container.decode([[UnweightedEdge]].self, forKey: .edges)
@@ -51,7 +51,7 @@ public final class UnweightedGraph<V: Equatable>: CustomStringConvertible, Colle
     /// - parameter directed: If false, undirected edges are created.
     ///                       If true, a reversed edge is also created.
     ///                       Default is false.
-    public func addEdge(_ e: UnweightedEdge, directed: Bool) {
+    public mutating func addEdge(_ e: UnweightedEdge, directed: Bool) {
         edges[e.u].append(e)
         if !directed && e.u != e.v {
             edges[e.v].append(e.reversed())
@@ -62,7 +62,7 @@ public final class UnweightedGraph<V: Equatable>: CustomStringConvertible, Colle
     ///
     /// - parameter v: The vertex to be added.
     /// - returns: The index where the vertex was added.
-    public func addVertex(_ v: V) -> Int {
+    public mutating func addVertex(_ v: V) -> Int {
         vertices.append(v)
         edges.append([UnweightedEdge]())
         return vertices.count - 1
@@ -82,7 +82,7 @@ public final class UnweightedGraph<V: Equatable>: CustomStringConvertible, Colle
     ///               If true, edges are directed from vertex i to vertex i+1 in path.
     ///               Default is false.
     public static func withPath(_ path: [V], directed: Bool = false) -> Self {
-        let g = Self(vertices: path)
+        var g = Self(vertices: path)
 
         guard path.count >= 2 else {
             return g
@@ -111,7 +111,7 @@ public final class UnweightedGraph<V: Equatable>: CustomStringConvertible, Colle
     ///               If true, edges are directed from vertex i to vertex i+1 in cycle.
     ///               Default is false.
     public static func withCycle(_ cycle: [V], directed: Bool = false) -> Self {
-        let g = Self.withPath(cycle, directed: directed)
+        var g = Self.withPath(cycle, directed: directed)
         if cycle.count > 0 {
             g.addEdge(fromIndex: cycle.count-1, toIndex: 0, directed: directed)
         }
@@ -123,7 +123,7 @@ public final class UnweightedGraph<V: Equatable>: CustomStringConvertible, Colle
     /// - parameter from: The starting vertex's index.
     /// - parameter to: The ending vertex's index.
     /// - parameter directed: Is the edge directed? (default `false`)
-    public func addEdge(fromIndex: Int, toIndex: Int, directed: Bool = false) {
+    public mutating func addEdge(fromIndex: Int, toIndex: Int, directed: Bool = false) {
         addEdge(UnweightedEdge(u: fromIndex, v: toIndex, directed: directed), directed: directed)
     }
     
@@ -132,7 +132,7 @@ public final class UnweightedGraph<V: Equatable>: CustomStringConvertible, Colle
     /// - parameter from: The starting vertex.
     /// - parameter to: The ending vertex.
     /// - parameter directed: Is the edge directed? (default `false`)
-    public func addEdge(from: V, to: V, directed: Bool = false) {
+    public mutating func addEdge(from: V, to: V, directed: Bool = false) {
         if let u = indexOfVertex(from), let v = indexOfVertex(to) {
             addEdge(UnweightedEdge(u: u, v: v, directed: directed), directed: directed)
         }
@@ -265,7 +265,7 @@ public final class UnweightedGraph<V: Equatable>: CustomStringConvertible, Colle
     /// - parameter from: The starting vertex's index.
     /// - parameter to: The ending vertex's index.
     /// - parameter bidirectional: Remove edges coming back (to -> from)
-    public /*mutating*/ func removeAllEdges(from: Int, to: Int, bidirectional: Bool = true) {
+    public mutating func removeAllEdges(from: Int, to: Int, bidirectional: Bool = true) {
         edges[from].removeAll(where: { $0.v == to })
 
         if bidirectional {
@@ -278,7 +278,7 @@ public final class UnweightedGraph<V: Equatable>: CustomStringConvertible, Colle
     /// - parameter from: The starting vertex.
     /// - parameter to: The ending vertex.
     /// - parameter bidirectional: Remove edges coming back (to -> from)
-    public /*mutating*/ func removeAllEdges(from: V, to: V, bidirectional: Bool = true) {
+    public mutating func removeAllEdges(from: V, to: V, bidirectional: Bool = true) {
         if let u = indexOfVertex(from) {
             if let v = indexOfVertex(to) {
                 removeAllEdges(from: u, to: v, bidirectional: bidirectional)
@@ -289,7 +289,7 @@ public final class UnweightedGraph<V: Equatable>: CustomStringConvertible, Colle
     /// Removes a vertex at a specified index, all of the edges attached to it, and renumbers the indexes of the rest of the edges.
     ///
     /// - parameter index: The index of the vertex.
-    public /*mutating*/ func removeVertexAtIndex(_ index: Int) {
+    public mutating func removeVertexAtIndex(_ index: Int) {
         //remove all edges ending at the vertex, first doing the ones below it
         //renumber edges that end after the index
         for j in 0..<index {
@@ -335,7 +335,7 @@ public final class UnweightedGraph<V: Equatable>: CustomStringConvertible, Colle
     /// Removes the first occurence of a vertex, all of the edges attached to it, and renumbers the indexes of the rest of the edges.
     ///
     /// - parameter vertex: The vertex to be removed..
-    public /*mutating*/ func removeVertex(_ vertex: V) {
+    public mutating func removeVertex(_ vertex: V) {
         if let i = indexOfVertex(vertex) {
             removeVertexAtIndex(i)
         }

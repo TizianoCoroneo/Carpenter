@@ -13,7 +13,7 @@ public extension Carpenter {
     private func representableGraph(
         _ graph: UnweightedGraph<AnyDependencyKey>
     ) -> UnweightedGraph<String> {
-        let new = UnweightedGraph<String>(vertices: graph.vertices.map { $0.displayName() })
+        var new = UnweightedGraph<String>(vertices: graph.vertices.map { $0.displayName() })
         for edge in graph.edgeList() { new.addEdge(edge, directed: edge.directed) }
         return new
     }

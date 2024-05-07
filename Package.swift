@@ -22,21 +22,11 @@ let package = Package(
             name: "Carpenter",
             targets: ["Carpenter"]),
     ],
-    dependencies: [
-        .package(url: "https://github.com/mrwerdo/SwiftGraph", branch: "master")
-    ],
+    dependencies: [],
     targets: [
         // MARK: - Source
 
-        .target(
-            name: "Carpenter",
-            dependencies: [
-                "SwiftGraph"
-            ]
-            , swiftSettings: [
-//                .unsafeFlags(["-no-whole-module-optimization"]) // Without this flag we crash the 5.10 compiler
-            ]
-        ),
+        .target(name: "Carpenter"),
 
         .target(
             name: "CarpenterTestUtilities",

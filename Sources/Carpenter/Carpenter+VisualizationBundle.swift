@@ -1,5 +1,5 @@
 
-import SwiftGraph
+//import class SwiftGraph.UnweightedGraph
 
 // MARK: - Visualization helper
 

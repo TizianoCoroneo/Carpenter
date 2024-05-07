@@ -1,5 +1,5 @@
 {
-  "originHash" : "ed2b6d9114f12fffc3f061689fe2c6641d10c6dd1940a243cc249a1e96130493",
+  "originHash" : "67e2a83f9d0dc2f69e9f9a5b2739dea6619ad67e13afcc37e05dbba225257827",
   "pins" : [
     {
       "identity" : "hdrhistogram-swift",
@@ -62,15 +62,6 @@
       "state" : {
         "revision" : "025bcb1165deab2e20d4eaba79967ce73013f496",
         "version" : "1.2.1"
-      }
-    },
-    {
-      "identity" : "swiftgraph",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/mrwerdo/SwiftGraph",
-      "state" : {
-        "branch" : "master",
-        "revision" : "867dd0920cc766ace4db3f7cb09283b53c1c4387"
       }
     },
     {

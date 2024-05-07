@@ -3,7 +3,6 @@
 @_exported import enum GraphViz.LayoutAlgorithm
 @_exported import enum GraphViz.Format
 import Foundation
-import SwiftGraph
 import GraphViz
 
 struct CarpenterVisualizer {

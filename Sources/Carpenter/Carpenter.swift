@@ -185,12 +185,17 @@ public struct Carpenter {
             lateInitDependencyGraph.edges[index].removeAll()
         }
 
+        let dependencyGraphIndexCache = [Vertex: Int](
+            uniqueKeysWithValues: dependencyGraph.vertices.enumerated().map { ($1, $0) })
+        let lateDependencyGraphIndexCache = [Vertex: Int](
+            uniqueKeysWithValues: lateInitDependencyGraph.vertices.enumerated().map { ($1, $0) })
+
         for (productName, requirementsNames) in requirementsByResultName {
-            guard let productIndex = dependencyGraph.indexOfVertex(productName)
+            guard let productIndex = dependencyGraphIndexCache[productName]
             else { throw E.productNotFound(name: productName) }
 
             for requirement in requirementsNames {
-                guard let requirementIndex = dependencyGraph.indexOfVertex(requirement)
+                guard let requirementIndex = dependencyGraphIndexCache[requirement]
                 else { throw E.requirementNotFound(name: requirement, requestedBy: productName) }
 
                 dependencyGraph.addEdge(
@@ -200,11 +205,11 @@ public struct Carpenter {
         }
 
         for (productName, requirementsNames) in lateRequirementsByResultName {
-            guard let productIndex = lateInitDependencyGraph.indexOfVertex(productName)
+            guard let productIndex = lateDependencyGraphIndexCache[productName]
             else { throw E.productNotFoundForLateInitialization(name: productName) }
 
             for requirement in requirementsNames {
-                guard let requirementIndex = lateInitDependencyGraph.indexOfVertex(requirement)
+                guard let requirementIndex = lateDependencyGraphIndexCache[requirement]
                 else { throw E.requirementNotFoundForLateInitialization(name: requirement, requestedBy: productName) }
 
                 lateInitDependencyGraph.addEdge(

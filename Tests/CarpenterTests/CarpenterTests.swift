@@ -517,7 +517,7 @@ final class CarpenterTests: XCTestCase {
     func test_ProfileLargeProject() throws {
         let signposter = OSSignposter(logger: logger)
 
-        for _ in 0..<30 {
+        for _ in 0..<300 {
             let id = signposter.makeSignpostID()
             signposter.withIntervalSignpost("Running Carpenter", id: id) {
                 let generatedByCarpenter = GeneratedByCarpenter()
@@ -537,7 +537,7 @@ final class CarpenterTests: XCTestCase {
         let signposter = OSSignposter(logger: logger)
 
         self.measure {
-            for _ in 0..<30 {
+            for _ in 0..<300 {
                 let id = signposter.makeSignpostID()
                 signposter.withIntervalSignpost("Running Carpenter", id: id) {
                     let generatedByCarpenter = GeneratedByCarpenter()
